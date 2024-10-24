@@ -1,31 +1,56 @@
-library publish;
+library;
 
-import 'dart:io';
 import 'dart:convert';
-import 'dart:isolate';
+import 'dart:io';
 
-void main() async {
-  // Get the current working directory
-  String cwd = Directory.current.path;
-  // Get the path to the pubspec.yaml file
-  String pubspecPath = '$cwd/pubspec.yaml';
-  // Read the contents of the pubspec.yaml file
-  String pubspecContent = File(pubspecPath).readAsStringSync();
-  // Parse the contents of the pubspec.yaml file
-  // Map<String, dynamic> pubspec = loadYaml(pubspecContent);
-  // // Get the name of the package
-  // String packageName = pubspec['name'];
-  // Get the path to the android folder
-  String androidPath = '$cwd/android';
-  // Get the path to the signingConfigs folder
-  String signingConfigsPath = '$androidPath/signingConfigs';
-  // Get the path to the keystore.jks file
-  String keystorePath = '$signingConfigsPath/keystore.jks';
-  // Get the path to the keystore.properties file
-  String keystorePropertiesPath = '$signingConfigsPath/keystore.properties';
-  // Get the path to the keystore.properties file
-  String keystorePropertiesContent =
-      File(keystorePropertiesPath).readAsStringSync();
-  // Parse the contents of the keystore.properties file
-  Map<String, String> keystoreProperties = <String, String>{};
+import 'package:args/args.dart';
+import 'package:http/http.dart' as http;
+import 'package:yaml/yaml.dart';
+
+part './android_signing.dart';
+part './commons.dart';
+part './gen/helper.dart';
+part './pubspec_api.dart';
+
+/// Deciphers which scripts to run based on the arguments provided by the user
+/// Use `flutter pub pub run publish -h` to get help
+void decipherScript(List<String> arguments) async {
+  var parser = ArgParser(allowTrailingOptions: true);
+  parser.addFlag('help', abbr: 'h', negatable: false, help: "Usage help");
+
+  parser.addFlag("android-sign", abbr: 's', help: "Setups android signing config", negatable: false);
+
+  var genParser = ArgParser(allowTrailingOptions: true);
+  parser.addCommand("gen", genParser);
+  genParser.addOption("path", abbr: "p", help: "Base path, defaults to ${_Commons.basePath}", defaultsTo: _Commons.basePath);
+  genParser.addFlag(
+    "core",
+    abbr: "c",
+    help: "Generates core directory instead of feature directory",
+    negatable: false,
+  );
+
+  var argResults = parser.parse(arguments);
+  if (argResults.command?.name == "gen") {
+    final genArgResults = genParser.parse(argResults.command!.arguments);
+    if (genArgResults["core"]) {
+      _genCore(path: genArgResults["path"]);
+    } else {
+      _genFeatureDirectory(path: genArgResults["path"], feature: argResults.command!.arguments.first);
+    }
+    return;
+  }
+  if (argResults['help'] || argResults.arguments.length < 1) {
+    stdout.write('Android Signing Automation script for flutter');
+    stdout.write(parser.usage);
+    stdout.writeln("\n");
+    stdout.writeln("[Command: gen] - flutter pub run publish gen <options>");
+    stdout.writeln("Options:");
+    stdout.writeln(genParser.usage);
+    return;
+  }
+
+  if (argResults['android-sign']) {
+    _androidSign();
+  }
 }
