@@ -5,10 +5,13 @@ class _Commons {
   static final String pubspecPath = './pubspec.yaml';
   static final String appBuildPath = "./android/app/build.gradle";
 
-
   static bool fileContainsString(String path, String pattern) {
     String file = getFileAsString(path);
     return file.contains(pattern);
+  }
+
+  static Map loadConfig() {
+    return Map.from(loadYaml(File(pubspecPath).readAsStringSync()));
   }
 
   static bool pluginExists(String plugin) {

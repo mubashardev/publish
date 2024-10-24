@@ -1,6 +1,6 @@
 name: publish
 description: "A Flutter package to simplify generating Android signing keys and creating signed bundles for Play Store publishing."
-version: 0.0.1
+version: 1.0.4
 homepage: https://mubashar.dev
 repository: https://github.com/mubashardev/publish.git
 

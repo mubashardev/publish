@@ -4,8 +4,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:http/http.dart' as http;
 import 'package:yaml/yaml.dart';
+import 'package:http/http.dart' as http;
 
 part './android_signing.dart';
 part './commons.dart';
@@ -18,11 +18,15 @@ void decipherScript(List<String> arguments) async {
   var parser = ArgParser(allowTrailingOptions: true);
   parser.addFlag('help', abbr: 'h', negatable: false, help: "Usage help");
 
-  parser.addFlag("android-sign", abbr: 's', help: "Setups android signing config", negatable: false);
+  parser.addFlag("android-sign",
+      abbr: 's', help: "Setups android signing config", negatable: false);
 
   var genParser = ArgParser(allowTrailingOptions: true);
   parser.addCommand("gen", genParser);
-  genParser.addOption("path", abbr: "p", help: "Base path, defaults to ${_Commons.basePath}", defaultsTo: _Commons.basePath);
+  genParser.addOption("path",
+      abbr: "p",
+      help: "Base path, defaults to ${_Commons.basePath}",
+      defaultsTo: _Commons.basePath);
   genParser.addFlag(
     "core",
     abbr: "c",
@@ -36,7 +40,9 @@ void decipherScript(List<String> arguments) async {
     if (genArgResults["core"]) {
       _genCore(path: genArgResults["path"]);
     } else {
-      _genFeatureDirectory(path: genArgResults["path"], feature: argResults.command!.arguments.first);
+      _genFeatureDirectory(
+          path: genArgResults["path"],
+          feature: argResults.command!.arguments.first);
     }
     return;
   }

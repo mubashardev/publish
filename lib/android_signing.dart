@@ -7,7 +7,13 @@ String? keystorePass;
 const String keyPropertiesPath = "./android/key.properties";
 
 /// Main function that uses other helper functions to setup android signing
-void _androidSign() {
+void _androidSign() async {
+  stdout.writeln("Checking for package update...");
+  var latest = await _PubspecAPI.checkIfLatestVersion("publish");
+  if (!latest) {
+    return;
+  }
+  stdout.writeln('--------------------------------------------');
   _generateKeystore();
   _createKeyProperties();
   _configureBuildConfig();
@@ -15,41 +21,52 @@ void _androidSign() {
 
 /// Generates the keystore with the given settings
 void _generateKeystore() {
-  String defDname =
-      "CN=Mubashar Hussain, OU=MH, O=Mubashar Dev Ltd., L=Layyah, S=Punjab, C=PK";
-
   stdout.write("enter key alias: ");
   alias = stdin.readLineSync();
 
-  stdout.writeln(
-    '''\n
---------------------------------------------------
-CN=Mubashar Hussain: Common Name (CN), typically refers to the domain name or the entity that the certificate is issued for. In this case, "Mubashar Hussain"
+  stdout.write("Publisher's Common Name (i.e. Mubashar Hussain): ");
+  String cn = (stdin.readLineSync() ?? "").trim();
+  cn = cn.isEmpty ? 'Mubashar Hussain' : cn;
 
-OU=MH: Organizational Unit (OU), refers to a subdivision within an organization. Here, it could refer to a department or division, like "MH"
+  stdout.write("Organizational Unit (i.e. MH): ");
+  String ou = (stdin.readLineSync() ?? "").trim();
+  ou = ou.isEmpty ? 'MH' : ou;
 
-O=Mubashar Dev Ltd.: Organization (O), which represents the legal entity, in this case, "Mubashar Dev Ltd."
+  stdout.write("Organization (i.e. MicroProgramers): ");
+  String org = (stdin.readLineSync() ?? "").trim();
+  org = org.isEmpty ? 'MicroProgramers' : org;
 
-L=Layyah: Locality (L), which refers to the city where the organization is located. In this case, "Layyah"
+  stdout.write("Locality (i.e. Layyah): ");
+  String locality = (stdin.readLineSync() ?? "").trim();
+  locality = locality.isEmpty ? 'Layyah' : locality;
 
-S=Punjab: State (S), which is the state or province where the organization is located, here "Punjab"
+  stdout.write("State (i.e. Punjab): ");
+  String state = (stdin.readLineSync() ?? "").trim();
+  state = state.isEmpty ? 'Punjab' : state;
 
-C=PK: Country (C), refers to the country code in ISO format. "PK" is the code for Pakistan.
---------------------------------------------------\n
-    '''
-  );
-  stdout.write(
-      "enter dname as ($defDname): ");
-  String? dname = stdin.readLineSync();
-  if (dname == null || dname.isEmpty) dname = defDname;
+  stdout.write("Country ISO (i.e. PK for Pakistan): ");
+  String country = (stdin.readLineSync() ?? "").trim();
+  country = country.isEmpty ? 'PK' : country;
+
+  stdout.write("Validity Years (i.e. 100): ");
+  var validity = int.tryParse(stdin.readLineSync() ?? "");
+  int days = validity != null
+      ? (validity * 365)
+      : (DateTime(9999).difference(DateTime.now()).inDays);
+
+  String dname = "CN=$cn, OU=$ou, O=$org, L=$locality, S=$state, C=$country";
+
   stdout.write("key password: ");
   keyPass = stdin.readLineSync();
   stdout.write("keystore password: ");
   keystorePass = stdin.readLineSync();
-  if (alias == null || alias!.isEmpty ||
+  if (alias == null ||
+      alias!.isEmpty ||
       dname.isEmpty ||
-      keyPass == null || keyPass!.isEmpty ||
-      keystorePass == null || keystorePass!.isEmpty) {
+      keyPass == null ||
+      keyPass!.isEmpty ||
+      keystorePass == null ||
+      keystorePass!.isEmpty) {
     stderr.writeln("All inputs that don't have default mentioned are required");
     return;
   }
@@ -77,7 +94,7 @@ C=PK: Country (C), refers to the country code in ISO format. "PK" is the code fo
     "-keysize",
     "2048",
     "-validity",
-    "100000"
+    "$days"
   ]);
   stdout.write(res.stdout);
   stderr.write(res.stderr);
