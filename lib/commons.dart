@@ -3,31 +3,8 @@ part of 'publish.dart';
 class _Commons {
   static final String basePath = "./lib";
   static final String pubspecPath = './pubspec.yaml';
-  static final String stringsPath =
-      "./android/app/src/main/res/values/strings.xml";
-  static final String manifestPath =
-      "./android/app/src/main/AndroidManifest.xml";
   static final String appBuildPath = "./android/app/build.gradle";
 
-  /// Default plugin versions
-  static Map<String, dynamic> defaultConfig = {
-    "plugins": {
-      "firebase_auth": "^0.14.0+5",
-      "google_sign_in": "^4.0.7",
-      "provider": "^3.1.0",
-      "google_maps": "^0.5.21+2",
-      "firestore": "^0.12.9+4"
-    },
-    "google_services": "4.3.3"
-  };
-
-  /// Loads config either from the flutter_automation.yaml config file or default config
-  static Map<String, dynamic> loadConfig() {
-    if (!File("./flutter_automation.yaml").existsSync()) return defaultConfig;
-    String configcontent = File("./flutter_automation.yaml").readAsStringSync();
-    var configFile = loadYaml(configcontent);
-    return Map<String, dynamic>.from(configFile);
-  }
 
   static bool fileContainsString(String path, String pattern) {
     String file = getFileAsString(path);
