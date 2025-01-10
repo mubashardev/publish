@@ -2,34 +2,34 @@ part of 'publish.dart';
 
 class _Commons {
   static final String basePath = "./lib";
-  static final String pubspecPath = './pubspec.yaml';
+  // static final String pubspecPath = './pubspec.yaml';
   static final String appBuildPath = "./android/app/build.gradle";
 
-  static bool fileContainsString(String path, String pattern) {
-    String file = getFileAsString(path);
-    return file.contains(pattern);
-  }
+  // static bool fileContainsString(String path, String pattern) {
+  //   String file = getFileAsString(path);
+  //   return file.contains(pattern);
+  // }
 
-  static Map loadConfig() {
-    return Map.from(loadYaml(File(pubspecPath).readAsStringSync()));
-  }
+  // static Map loadConfig() {
+  //   return Map.from(loadYaml(File(pubspecPath).readAsStringSync()));
+  // }
 
-  static bool pluginExists(String plugin) {
-    return fileContainsString(pubspecPath, plugin);
-  }
+  // static bool pluginExists(String plugin) {
+  //   return fileContainsString(pubspecPath, plugin);
+  // }
 
-  /// Adds provided dependencies to pubspec.yaml file
-  static void addDependencise(String dependencies) {
-    replaceFirstStringInfile(
-        pubspecPath, "dev_dependencies:", "$dependencies\ndev_dependencies:");
-  }
+  // /// Adds provided dependencies to pubspec.yaml file
+  // static void addDependencise(String dependencies) {
+  //   replaceFirstStringInfile(
+  //       pubspecPath, "dev_dependencies:", "$dependencies\ndev_dependencies:");
+  // }
 
   /// replace string in a file at [path] from [from] to [to]
-  static void replaceFirstStringInfile(String path, Pattern from, String to) {
-    String contents = getFileAsString(path);
-    contents = contents.replaceFirst(from, to);
-    writeStringToFile(path, contents);
-  }
+  // static void replaceFirstStringInfile(String path, Pattern from, String to) {
+  //   String contents = getFileAsString(path);
+  //   contents = contents.replaceFirst(from, to);
+  //   writeStringToFile(path, contents);
+  // }
 
   /// Reads a file at [path] as string
   static String getFileAsString(String path) {

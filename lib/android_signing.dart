@@ -8,20 +8,30 @@ const String keyPropertiesPath = "./android/key.properties";
 
 /// Main function that uses other helper functions to setup android signing
 void _androidSign() async {
-  stdout.writeln("Checking for package update...");
-  var latest = await _PubspecAPI.checkIfLatestVersion("publish");
-  if (!latest) {
-    return;
-  }
   stdout.writeln('--------------------------------------------');
+  var appId = _getApplicationId();
+  await _askToChangeId(appId);
   _generateKeystore();
   _createKeyProperties();
   _configureBuildConfig();
 }
 
+Future<void> _askToChangeId(String oldId) async {
+  stdout.writeln("Current package name: $oldId");
+  stdout.write("Do you want to change the package name? [y/n] ");
+  var input = stdin.readLineSync();
+  if (input == "y" || input == "Y") {
+    stdout.write("Enter new package name: ");
+    var appId = stdin.readLineSync();
+    if (appId != null) {
+      _setAppId(appId);
+    }
+  }
+}
+
 /// Generates the keystore with the given settings
 void _generateKeystore() {
-  stdout.write("enter key alias: ");
+  stdout.write("Enter key alias: ");
   alias = stdin.readLineSync();
 
   stdout.write("Publisher's Common Name (i.e. Mubashar Hussain): ");
@@ -152,4 +162,49 @@ void _configureBuildConfig() {
   } else {
     stdout.writeln("release configs already configured");
   }
+}
+
+String _getApplicationId() {
+  // Read the build.gradle file as a string
+  String bfString = _Commons.getFileAsString(_Commons.appBuildPath);
+
+  // Match defaultConfig block
+  RegExp defaultConfigRegex = RegExp(
+    r"defaultConfig\s*\{([\s\S]*?)\}",
+    multiLine: true,
+  );
+
+  RegExpMatch? defaultConfigMatch = defaultConfigRegex.firstMatch(bfString);
+
+  if (defaultConfigMatch != null) {
+    String defaultConfigBlock = defaultConfigMatch.group(1)!;
+
+    // Match applicationId inside defaultConfig block
+    RegExp applicationIdRegex = RegExp(
+      r"""applicationId\s+['\"]([^'\"]+)['\"]""",
+    );
+
+    RegExpMatch? applicationIdMatch =
+        applicationIdRegex.firstMatch(defaultConfigBlock);
+
+    if (applicationIdMatch != null) {
+      return applicationIdMatch.group(1)!; // Extract the applicationId
+    } else {
+      throw Exception("applicationId not found in defaultConfig block.");
+    }
+  } else {
+    throw Exception("defaultConfig block not found.");
+  }
+}
+
+void _setAppId(String appId) {
+  List<String> buildfile = _Commons.getFileAsLines(_Commons.appBuildPath);
+  buildfile = buildfile.map((line) {
+    if (line.contains("applicationId")) {
+      return "applicationId '$appId'";
+    } else {
+      return line;
+    }
+  }).toList();
+  _Commons.writeStringToFile(_Commons.appBuildPath, buildfile.join("\n"));
 }

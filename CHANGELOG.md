@@ -14,3 +14,6 @@ Organization, Locality, State, Country, and Validity inputs. Defaults provided f
 
 # 1.0.4
 Fixed validity years input bug.
+
+# 1.0.5
+Added functionality to change package name during signing setup

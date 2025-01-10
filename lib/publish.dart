@@ -15,6 +15,12 @@ part './pubspec_api.dart';
 /// Deciphers which scripts to run based on the arguments provided by the user
 /// Use `flutter pub pub run publish -h` to get help
 void decipherScript(List<String> arguments) async {
+  stdout.writeln("Checking for update...");
+  var latest = await _PubspecAPI.checkIfLatestVersion("publish");
+  if (!latest) {
+    return;
+  }
+
   var parser = ArgParser(allowTrailingOptions: true);
   parser.addFlag('help', abbr: 'h', negatable: false, help: "Usage help");
 
