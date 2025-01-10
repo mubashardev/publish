@@ -179,9 +179,9 @@ String _getApplicationId() {
   if (defaultConfigMatch != null) {
     String defaultConfigBlock = defaultConfigMatch.group(1)!;
 
-    // Match applicationId inside defaultConfig block
+    // Match applicationId inside defaultConfig block (supports both formats)
     RegExp applicationIdRegex = RegExp(
-      r"""applicationId\s+['\"]([^'\"]+)['\"]""",
+      r"""applicationId\s*(?:=|)\s*['"]([^'"]+)['"]""",
     );
 
     RegExpMatch? applicationIdMatch =
@@ -197,14 +197,29 @@ String _getApplicationId() {
   }
 }
 
+
 void _setAppId(String appId) {
   List<String> buildfile = _Commons.getFileAsLines(_Commons.appBuildPath);
+
+  // Regex to match both formats
+  RegExp applicationIdRegex = RegExp(
+    r"""applicationId\s*(=|)\s*['"][^'"]+['"]""",
+  );
+
   buildfile = buildfile.map((line) {
-    if (line.contains("applicationId")) {
-      return "applicationId '$appId'";
+    if (applicationIdRegex.hasMatch(line)) {
+      // Determine the existing format
+      if (line.contains('=')) {
+        // New format: applicationId = "..."
+        return "applicationId = '$appId'";
+      } else {
+        // Old format: applicationId "..."
+        return "applicationId '$appId'";
+      }
     } else {
       return line;
     }
   }).toList();
+
   _Commons.writeStringToFile(_Commons.appBuildPath, buildfile.join("\n"));
 }
