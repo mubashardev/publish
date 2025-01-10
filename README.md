@@ -9,6 +9,7 @@ commands – just use this package to generate keys and configure the signing pr
 - Automatically generate Android keystores.
 - Create and configure the `key.properties` file for signing.
 - Update the `build.gradle` file for signing your app.
+- Update your **Android App Package Name**
 - Simplified command usage for creating signed bundles.
 
 ## Installation:
@@ -36,27 +37,14 @@ commands – just use this package to generate keys and configure the signing pr
     - Create the `key.properties` file with your details.
     - Update your `build.gradle` file for release builds.
 
-2. **Generate Feature Directory:**
-   You can also generate a feature directory using the command:
-   ```
-   flutter pub run publish gen <feature_name>
-   ```
 
-   For generating a core directory:
-   ```
-   flutter pub run publish gen --core
-   ```
-
-   You can also specify the path with:
-   ```
-   flutter pub run publish gen --path <your_base_path>
-   ```
-
-3. **Help:**
+2. **Help:**
    For a list of available options, run:
    ```
    flutter pub run publish -h
    ```
+
+3. **More features coming soon...**
 
 ## Contributions:
 
