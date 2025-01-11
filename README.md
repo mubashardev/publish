@@ -17,7 +17,7 @@ commands – just use this package to generate keys and configure the signing pr
 1. Add the following to your `pubspec.yaml` file:
    ```
    dependencies:
-     publish: ^1.0.0
+     publish: ^latest-version
    ```
 
 2. Run the command:
@@ -25,7 +25,7 @@ commands – just use this package to generate keys and configure the signing pr
    flutter pub get
    ```
 
-## Usage:
+## Steps:
 
 1. **Setup Android Signing:**
    To generate the signing key and configure necessary files, use this command:
@@ -33,18 +33,27 @@ commands – just use this package to generate keys and configure the signing pr
    flutter pub run publish --android-sign
    ```
    This will:
+    - Update package name
     - Generate a keystore file.
     - Create the `key.properties` file with your details.
     - Update your `build.gradle` file for release builds.
 
 
-2. **Help:**
-   For a list of available options, run:
-   ```
-   flutter pub run publish -h
-   ```
+2. **Generate App Bundle:**
+   - To update app version, open `pubspec.yaml` and update the `version` field accordingly.
+   - To create a signed app bundle, use this command:
+      ```
+      flutter build appbundle
+      ```
+      This will generate a signed app bundle in the `build/app/outputs/bundle/release` directory.
 
-3. **More features coming soon...**
+3. **Publish to Play Store:**
+   Once the app bundle is generated, you can upload it to the Play Store for distribution.
+
+
+## Optional:
+   Add the generated keystore and `key.properties` file to your Git repository to avoid re-generating them.
+
 
 ## Contributions:
 

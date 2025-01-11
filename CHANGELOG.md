@@ -19,5 +19,5 @@ Fixed validity years input bug.
 Added functionality to change package name during signing setup
 
 
-# 1.0.7
+# 1.0.8
 Enhance applicationId regex to support both old and new formats in build file
