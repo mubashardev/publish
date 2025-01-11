@@ -50,6 +50,8 @@ commands – just use this package to generate keys and configure the signing pr
 3. **Publish to Play Store:**
    Once the app bundle is generated, you can upload it to the Play Store for distribution.
 
+4. **Cleanup:**
+   As this package is meant to be a one-time setup, now you don't need this package anymore, you can remove it from your `pubspec.yaml` file.
 
 ## Optional:
    Add the generated keystore and `key.properties` file to your Git repository to avoid re-generating them.

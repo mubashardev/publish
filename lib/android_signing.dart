@@ -1,9 +1,18 @@
 part of 'publish.dart';
 
+/// Alias for the key entry in the keystore
 String? alias;
+
+/// Path to the keystore file
 String keystorePath = "keys/keystore.jks";
+
+/// Password for the key entry in the keystore
 String? keyPass;
+
+/// Password for the keystore file
 String? keystorePass;
+
+/// Path to the properties file used for signing configuration
 const String keyPropertiesPath = "./android/key.properties";
 
 /// Main function that uses other helper functions to setup android signing
@@ -196,7 +205,6 @@ String _getApplicationId() {
     throw Exception("defaultConfig block not found.");
   }
 }
-
 
 void _setAppId(String appId) {
   List<String> buildfile = _Commons.getFileAsLines(_Commons.appBuildPath);

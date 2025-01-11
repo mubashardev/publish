@@ -52,8 +52,8 @@ void decipherScript(List<String> arguments) async {
     }
     return;
   }
-  if (argResults['help'] || argResults.arguments.length < 1) {
-    stdout.write('Android Signing Automation script for flutter');
+  if (argResults['help'] || argResults.arguments.isEmpty) {
+    stdout.write('Android Signing script for flutter');
     stdout.write(parser.usage);
     stdout.writeln("\n");
     stdout.writeln("[Command: gen] - flutter pub run publish gen <options>");
