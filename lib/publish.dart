@@ -1,68 +1,114 @@
-library;
+library publish;
 
 import 'dart:convert';
 import 'dart:io';
-
-import 'package:args/args.dart';
+import 'package:args/command_runner.dart';
+import 'package:xml/xml.dart';
 import 'package:yaml/yaml.dart';
 import 'package:http/http.dart' as http;
 
-part './android_signing.dart';
-part './commons.dart';
+part 'src/android_signing.dart';
+part 'src/commons.dart';
 part './gen/helper.dart';
-part './pubspec_api.dart';
+part 'src/pubspec_api.dart';
+part 'src/update_helper.dart';
+part 'src/validator.dart';
+part 'configs/android_configs.dart';
 
-/// Deciphers which scripts to run based on the arguments provided by the user
-/// Use `flutter pub pub run publish -h` to get help
-void decipherScript(List<String> arguments) async {
-  stdout.writeln("Checking for update...");
-  var latest = await _PubspecAPI.checkIfLatestVersion("publish");
-  if (!latest) {
-    return;
-  }
+class CheckAppConfigsCommand extends Command {
+  // ANSI escape codes for colors
+  static const String reset = '\x1B[0m';
+  static const String green = '\x1B[32m';
+  static const String yellow = '\x1B[33m';
+  static const String blue = '\x1B[34m';
+  static const String cyan = '\x1B[36m';
 
-  var parser = ArgParser(allowTrailingOptions: true);
-  parser.addFlag('help', abbr: 'h', negatable: false, help: "Usage help");
+  @override
+  String get description =>
+      'Check current configurations of your flutter app ie. app name, package name, etc.';
 
-  parser.addFlag("android-sign",
-      abbr: 's', help: "Setups android signing config", negatable: false);
+  @override
+  String get name => 'check-configs';
 
-  var genParser = ArgParser(allowTrailingOptions: true);
-  parser.addCommand("gen", genParser);
-  genParser.addOption("path",
-      abbr: "p",
-      help: "Base path, defaults to ${_Commons.basePath}",
-      defaultsTo: _Commons.basePath);
-  genParser.addFlag(
-    "core",
-    abbr: "c",
-    help: "Generates core directory instead of feature directory",
-    negatable: false,
-  );
-
-  var argResults = parser.parse(arguments);
-  if (argResults.command?.name == "gen") {
-    final genArgResults = genParser.parse(argResults.command!.arguments);
-    if (genArgResults["core"]) {
-      _genCore(path: genArgResults["path"]);
-    } else {
-      _genFeatureDirectory(
-          path: genArgResults["path"],
-          feature: argResults.command!.arguments.first);
+  @override
+  void run() {
+    if (!_Validator.isPubspecValid) {
+      stdout.writeln(
+        "This directory doesn't seem to be a valid Flutter project.",
+      );
+      return;
     }
-    return;
-  }
-  if (argResults['help'] || argResults.arguments.isEmpty) {
-    stdout.write('Android Signing script for flutter');
-    stdout.write(parser.usage);
-    stdout.writeln("\n");
-    stdout.writeln("[Command: gen] - flutter pub run publish gen <options>");
-    stdout.writeln("Options:");
-    stdout.writeln(genParser.usage);
-    return;
+
+    var validAndroid =
+        _Validator.isAndroidManifestValid && _Validator.isGradleValid;
+    var validIos = true;
+
+    if (validAndroid || validIos) {
+      stdout.writeln('\n==============================');
+      stdout.writeln('${cyan}🚀 Application Details$reset');
+      stdout.writeln('==============================\n');
+      if (validAndroid) {
+        printAppDetails(
+            "📱 Android", _AndroidConfigs.appName, _AndroidConfigs.appId);
+      }
+      if (validAndroid && validIos) {
+        stdout.writeln('\n------------------------------\n');
+      }
+      if (validIos) {
+        printAppDetails("🍎 iOS", "Testing", "1.0.0");
+      }
+      stdout.writeln('\n==============================\n');
+    }
   }
 
-  if (argResults['android-sign']) {
-    _androidSign();
+  /// Prints app and package details for Android and iOS in a formatted and colorful manner.
+  static void printAppDetails(String type, String appName, String appId) {
+    // Android section
+    stdout.writeln('${yellow}$type Details:$reset');
+    stdout.writeln('\tApp Name:\t\t\t${green}$appName$reset');
+    stdout.writeln('\tPackage Name:\t\t\t${blue}$appId$reset');
+  }
+}
+
+class UpdateCommand extends Command {
+  @override
+  String get description =>
+      'Update the `publish` package to the latest version.';
+
+  @override
+  String get name => 'update';
+
+  @override
+  void run() {
+    _UpdateHelper.update();
+  }
+}
+
+class AndroidSignCommand extends Command {
+  @override
+  String get description => 'Set up Android signing configurations.';
+
+  @override
+  String get name => 'sign-android';
+
+  @override
+  void run() {
+    if (!_Validator.isPubspecValid) {
+      stdout.writeln(
+          'This directory doesn\'t seem to be a valid Flutter project.');
+      return;
+    } else if (!_Validator.isAndroidManifestValid) {
+      stdout.writeln(
+          'Your Flutter project doesn\'t have a valid AndroidManifest.xml file.');
+      return;
+    } else if (!_Validator.isGradleValid) {
+      stdout.writeln(
+          'Your Flutter android project doesn\'t have a valid build.gradle file.');
+      return;
+    }
+
+    _UpdateHelper.checkIfUpdateAvailable().then((isLatest) {
+      _androidSign(); // Calls your existing signing logic
+    });
   }
 }

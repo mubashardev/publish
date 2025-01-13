@@ -1,4 +1,4 @@
-part of 'publish.dart';
+part of '../publish.dart';
 
 /// Alias for the key entry in the keystore
 String? alias;
@@ -18,7 +18,7 @@ const String keyPropertiesPath = "./android/key.properties";
 /// Main function that uses other helper functions to setup android signing
 void _androidSign() async {
   stdout.writeln('--------------------------------------------');
-  var appId = _getApplicationId();
+  var appId = _AndroidConfigs.appId;
   await _askToChangeId(appId);
   _generateKeystore();
   _createKeyProperties();
@@ -170,39 +170,6 @@ void _configureBuildConfig() {
     stdout.writeln("configured release configs");
   } else {
     stdout.writeln("release configs already configured");
-  }
-}
-
-String _getApplicationId() {
-  // Read the build.gradle file as a string
-  String bfString = _Commons.getFileAsString(_Commons.appBuildPath);
-
-  // Match defaultConfig block
-  RegExp defaultConfigRegex = RegExp(
-    r"defaultConfig\s*\{([\s\S]*?)\}",
-    multiLine: true,
-  );
-
-  RegExpMatch? defaultConfigMatch = defaultConfigRegex.firstMatch(bfString);
-
-  if (defaultConfigMatch != null) {
-    String defaultConfigBlock = defaultConfigMatch.group(1)!;
-
-    // Match applicationId inside defaultConfig block (supports both formats)
-    RegExp applicationIdRegex = RegExp(
-      r"""applicationId\s*(?:=|)\s*['"]([^'"]+)['"]""",
-    );
-
-    RegExpMatch? applicationIdMatch =
-        applicationIdRegex.firstMatch(defaultConfigBlock);
-
-    if (applicationIdMatch != null) {
-      return applicationIdMatch.group(1)!; // Extract the applicationId
-    } else {
-      throw Exception("applicationId not found in defaultConfig block.");
-    }
-  } else {
-    throw Exception("defaultConfig block not found.");
   }
 }
 
