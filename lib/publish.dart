@@ -13,8 +13,9 @@ part 'src/pubspec_api.dart';
 part 'src/update_helper.dart';
 part 'src/validator.dart';
 part 'configs/android_configs.dart';
+part 'configs/ios_configs.dart';
 
-class CheckAppConfigsCommand extends Command {
+class ReadAppConfigsCommand extends Command {
   // ANSI escape codes for colors
   static const String reset = '\x1B[0m';
   static const String green = '\x1B[32m';
@@ -27,7 +28,7 @@ class CheckAppConfigsCommand extends Command {
       'Check current configurations of your flutter app ie. app name, package name, etc.';
 
   @override
-  String get name => 'check-configs';
+  String get name => '--read-configs';
 
   @override
   void run() {
@@ -54,7 +55,7 @@ class CheckAppConfigsCommand extends Command {
         stdout.writeln('\n------------------------------\n');
       }
       if (validIos) {
-        printAppDetails("🍎 iOS", "Testing", "1.0.0");
+        printAppDetails("🍎 iOS", _IosConfigs.appName, _IosConfigs.appId);
       }
       stdout.writeln('\n==============================\n');
     }
@@ -64,8 +65,149 @@ class CheckAppConfigsCommand extends Command {
   static void printAppDetails(String type, String appName, String appId) {
     // Android section
     stdout.writeln('${yellow}$type Details:$reset');
-    stdout.writeln('\tApp Name:\t\t\t${green}$appName$reset');
-    stdout.writeln('\tPackage Name:\t\t\t${blue}$appId$reset');
+    stdout.writeln('\tApp Name:\t\t${green}$appName$reset');
+    stdout.writeln('\t  App ID:\t\t${blue}$appId$reset');
+  }
+}
+
+class WriteAppConfigsCommand extends Command {
+  @override
+  String get description =>
+      'Write configurations for your flutter app ie. app name, package name, etc.';
+
+  @override
+  String get name => 'config';
+
+  WriteAppConfigsCommand() {
+    addSubcommand(WriteAndroidConfigsCommand());
+    addSubcommand(WriteIosConfigsCommand());
+  }
+
+  @override
+  void run() {
+    if (!_Validator.isPubspecValid) {
+      stdout.writeln(
+        "This directory doesn't seem to be a valid Flutter project.",
+      );
+      return;
+    }
+  }
+}
+
+class WriteAndroidConfigsCommand extends Command {
+  WriteAndroidConfigsCommand() {
+    argParser
+      ..addOption(
+        'name',
+        help: 'Set the app name for the Android project.',
+      )
+      ..addOption(
+        'id',
+        help: 'Set the package name (applicationId) for the Android project.',
+      );
+  }
+
+  @override
+  String get description =>
+      'Write configurations for your Android app (e.g., app name, package name).';
+
+  @override
+  String get name => 'android';
+
+  @override
+  void run() {
+    if (!_Validator.isAndroidManifestValid || !_Validator.isGradleValid) {
+      stdout.writeln(
+        "This directory doesn't seem to be a valid Flutter Android project.",
+      );
+      return;
+    }
+
+    final appName = argResults?['name'];
+    final appId = argResults?['id'];
+
+    if (appName != null) {
+      if (!_Validator.isValidAppName(appName)){
+        stdout.writeln('Invalid app name: $appName');
+        return;
+      }
+      // Call method to update Android app name
+      stdout.writeln('Setting Android app name to: $appName');
+      _AndroidConfigs.setAppName(appName);
+    }
+
+    if (appId != null) {
+      if (!_Validator.isValidAppId(appId)){
+        stdout.writeln('Invalid app ID: $appId');
+        return;
+      }
+      // Call method to update Android package name
+      stdout.writeln('Setting Android package name to: $appId');
+      _AndroidConfigs.setAppId(appId);
+    }
+
+    if (appName == null && appId == null) {
+      stdout.writeln('No options provided. Use --name or --id to set values.');
+    }
+  }
+}
+
+class WriteIosConfigsCommand extends Command {
+  WriteIosConfigsCommand() {
+    argParser
+      ..addOption(
+        'name',
+        help: 'Set the app name for the iOS project.',
+      )
+      ..addOption(
+        'id',
+        help: 'Set the package name (app id) for the iOS project.',
+      );
+  }
+
+  @override
+  String get description =>
+      'Write configurations for your Android app (e.g., app name, package name).';
+
+  @override
+  String get name => 'ios';
+
+  @override
+  void run() {
+    if (!_Validator.isAndroidManifestValid || !_Validator.isGradleValid) {
+      stdout.writeln(
+        "This directory doesn't seem to be a valid Flutter iOS project.",
+      );
+      return;
+    }
+
+    final appName = argResults?['name'];
+    final appId = argResults?['id'];
+
+
+    if (appName != null) {
+      if (!_Validator.isValidAppName(appName)){
+        stdout.writeln('Invalid app name: $appName');
+        return;
+      }
+      // Call method to update Android app name
+      stdout.writeln('Setting iOS app name to: $appName');
+      _IosConfigs.setAppName(appName);
+    }
+
+    if (appId != null) {
+      if (!_Validator.isValidAppId(appId)){
+        stdout.writeln('Invalid app ID: $appId');
+        return;
+      }
+      // Call method to update Android package name
+      stdout.writeln('Setting iOS package name to: $appId');
+      _IosConfigs.setAppId(appId);
+    }
+
+    if (appName == null && appId == null) {
+      stdout.writeln('No options provided. Use --name or --id to set values.');
+    }
   }
 }
 

@@ -5,6 +5,8 @@ class _Commons {
   // static final String pubspecPath = './pubspec.yaml';
   static final String appBuildPath = "./android/app/build.gradle";
   static final String appManifestPath = "./android/app/src/main/AndroidManifest.xml";
+  static final String iosPlistPath = './ios/Runner/Info.plist';
+  static final String iosPbxprojPath = './ios/Runner.xcodeproj/project.pbxproj';
 
   // static bool fileContainsString(String path, String pattern) {
   //   String file = getFileAsString(path);

@@ -43,4 +43,21 @@ class _Validator {
       return false;
     }
   }
+
+
+  static bool isValidAppId(String appId) {
+    // Regular expression to validate the app ID
+    final appIdRegex = RegExp(r'^([A-Za-z]{1}[A-Za-z\d_]*\.)+[A-Za-z][A-Za-z\d_]*$');
+
+    // Check if the app ID matches the pattern
+    return appIdRegex.hasMatch(appId);
+  }
+
+  static bool isValidAppName(String name) {
+    // Regular expression to validate the app name
+    final appNameRegex = RegExp(r'^[A-Za-z\s]+$');
+
+    // Check if the app name matches the pattern
+    return appNameRegex.hasMatch(name);
+  }
 }

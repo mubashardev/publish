@@ -9,7 +9,8 @@ void main(List<String> arguments) async {
     'A CLI tool for managing Android signing, Updating Package names and code generation.',
   )
     ..addCommand(AndroidSignCommand())
-    ..addCommand(CheckAppConfigsCommand())
+    ..addCommand(ReadAppConfigsCommand())
+    ..addCommand(WriteAppConfigsCommand())
     ..addCommand(UpdateCommand());
 
   try {
