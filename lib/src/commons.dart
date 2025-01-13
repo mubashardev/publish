@@ -1,7 +1,7 @@
 part of '../publish.dart';
 
 class _Commons {
-  static final String basePath = "./lib";
+  // static final String basePath = "./lib";
   // static final String pubspecPath = './pubspec.yaml';
   static final String appBuildPath = "./android/app/build.gradle";
   static final String appManifestPath =
