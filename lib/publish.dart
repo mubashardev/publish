@@ -9,7 +9,6 @@ import 'package:http/http.dart' as http;
 
 part 'src/android_signing.dart';
 part 'src/commons.dart';
-part './gen/helper.dart';
 part 'src/pubspec_api.dart';
 part 'src/update_helper.dart';
 part 'src/validator.dart';
