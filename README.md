@@ -75,7 +75,7 @@ publish config app-name --value "Test" --platforms=android,ios
 #### Update App ID:
 To update the app ID for both Android & iOS with single command:
 ```bash
-publish config app-id="com.test"
+publish config app-id --value "com.test"
 ```
 
 For platform-specific updates:
