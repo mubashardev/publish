@@ -20,3 +20,7 @@ Enhance applicationId regex to support both old and new formats in build file
 
 # 1.0.9
 Update README for cleanup instructions, and enhance 
+
+# 1.1.1
+ - Fixed bug in build.gradle default block. 
+ - Enhanced error messages for invalid input.
