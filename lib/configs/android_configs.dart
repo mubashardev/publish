@@ -2,15 +2,22 @@ part of '../publish.dart';
 
 class _AndroidConfigs {
   static String get appName {
-    // Get app name from AndroidManifest.xml
+    // Get the AndroidManifest.xml content as a string
     String manifestString = _Commons.getFileAsString(_Commons.appManifestPath);
-    RegExp appNameRegex = RegExp(r'<application\s+android:label="([^"]+)"');
 
+    // Regex to match the android:label attribute with possible variations
+    RegExp appNameRegex = RegExp(
+      r'<application[^>]*\s+android:label\s*=\s*"([^"]+)"',
+      dotAll: true,
+    );
+
+    // Match the regex pattern
     RegExpMatch? appNameMatch = appNameRegex.firstMatch(manifestString);
+
     if (appNameMatch != null) {
       return appNameMatch.group(1)!;
     } else {
-      throw Exception("App name not found in AndroidManifest.xml.");
+      throw Exception("App name not found or improperly formatted in AndroidManifest.xml.");
     }
   }
 

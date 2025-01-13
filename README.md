@@ -1,65 +1,90 @@
+
 # publish
 
-**publish** is a Flutter package designed to make it easier for developers to set up Android app
-signing and create signed app bundles for Play Store publishing. No need to memorize complex
-commands – just use this package to generate keys and configure the signing process with ease.
+**publish** is a Flutter CLI package designed to simplify app configuration, including setting app names, app IDs, and Android signing configurations for Play Store publishing. It removes the hassle of manual setup and allows developers to focus on building great apps.
 
 ## Features:
 
-- Automatically generate Android keystores.
-- Create and configure the `key.properties` file for signing.
-- Update the `build.gradle` file for signing your app.
-- Update your **Android App Package Name**
-- Simplified command usage for creating signed bundles.
+- Easily configure **App name** and **App ID** for both Android and iOS platforms.
+- Platform-specific configuration options.
+- Automatically generate Android keystores and configure signing files.
+- Simplified command usage for setting up your project and creating signed app bundles.
+
+---
 
 ## Installation:
 
-1. Add the following to your `pubspec.yaml` file:
+1. Run the following command in your CMD or Terminal:
+   ```bash
+   flutter pub global activate publish
    ```
-   dependencies:
-     publish: ^latest-version
-   ```
+   This will activate the superpowers of **publish** package.
+---
 
-2. Run the command:
-   ```
-   flutter pub get
-   ```
-
-## Steps:
-
-1. **Setup Android Signing:**
-   To generate the signing key and configure necessary files, use this command:
-   ```
-   flutter pub run publish --android-sign
-   ```
-   This will:
-    - Update package name
-    - Generate a keystore file.
-    - Create the `key.properties` file with your details.
-    - Update your `build.gradle` file for release builds.
+## Commands:
 
 
-2. **Generate App Bundle:**
-   - To update app version, open `pubspec.yaml` and update the `version` field accordingly.
-   - To create a signed app bundle, use this command:
-      ```
-      flutter build appbundle
-      ```
-      This will generate a signed app bundle in the `build/app/outputs/bundle/release` directory.
+### Android Signing Configuration
 
-3. **Publish to Play Store:**
-   Once the app bundle is generated, you can upload it to the Play Store for distribution.
+#### Generate Signing Key and Configure Files:
+Use this command in your project terminal to automatically generate a signing key and set up your Android project for release:
+```bash
+publish sign-android
+```
 
-4. **Cleanup:**
-   As this package is meant to be a one-time setup, now you don't need this package anymore, you can remove it from your `pubspec.yaml` file.
+This will:
+- Generate a keystore file.
+- Create the `key.properties` file with your details.
+- Update your `build.gradle` file for release builds.
 
-## Optional:
-   Add the generated keystore and `key.properties` file to your Git repository to avoid re-generating them.
+---
 
+### Generate App Bundle:
+
+To create a signed app bundle, run:
+```bash
+flutter build appbundle
+```
+
+The signed app bundle will be generated in the `build/app/outputs/bundle/release` directory.
+
+---
+
+### App Configuration
+
+#### Update App Name:
+To update the app name for both Android & iOS with single command:
+```bash
+publish config app-name --value "Test"
+```
+
+For platform-specific updates:
+```bash
+publish config app-name --value "Test" --platforms=android
+publish config app-name --value "Test" --platforms=ios
+publish config app-name --value "Test" --platforms=android,ios
+```
+
+#### Update App ID:
+To update the app ID for both Android & iOS with single command:
+```bash
+publish config app-id="com.test"
+```
+
+For platform-specific updates:
+```bash
+publish config app-id --value "com.test" --platforms=android
+publish config app-id --value "com.test" --platforms=ios
+publish config app-id --value "com.test" --platforms=android,ios
+```
+
+---
 
 ## Contributions:
 
-You are welcome to open issues or contribute to improving the package.
+We welcome contributions to improve this package! Feel free to open issues or submit pull requests.
+
+---
 
 ## License:
 

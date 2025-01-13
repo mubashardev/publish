@@ -28,6 +28,7 @@ class _Validator {
       XmlDocument.parse(xmlString);
       return true; // The XML is valid
     } catch (e) {
+      print(e);
       return false; // The XML is not valid
     }
   }
@@ -40,9 +41,37 @@ class _Validator {
       _AndroidConfigs.appId;
       return true;
     } catch (e) {
+      print(e);
       return false;
     }
   }
+
+  static bool get isPListExists => File("./ios/Runner/Info.plist").existsSync();
+  static bool get isPlistValid {
+    if (!isPListExists) return false;
+    try {
+      _IosConfigs.appId;
+      _IosConfigs.appName;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static bool get isPbxprojExists => File("./ios/Runner.xcodeproj/project.pbxproj").existsSync();
+  static bool get isPbxprojValid {
+    if (!isPbxprojExists) return false;
+    try {
+      _IosConfigs.appId;
+      _IosConfigs.appName;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static bool get isValidAndroid => isAndroidManifestValid && isGradleValid;
+  static bool get isValidIos => isPlistValid && isPbxprojValid;
 
 
   static bool isValidAppId(String appId) {
