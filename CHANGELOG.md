@@ -1,4 +1,4 @@
-# 1.1.1
+# 1.1.2
  - Fixed bug in build.gradle default block. 
  - Enhanced error messages for invalid input.
 
