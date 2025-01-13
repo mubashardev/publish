@@ -25,7 +25,8 @@ class _UpdateHelper {
       final latestVersion = await _PubspecAPI.getLatestVersion("publish");
       if (latestVersion == null) {
         stdout.writeln(
-            'Failed to fetch latest version. Make sure you have active internet connection.'.makeError);
+            'Failed to fetch latest version. Make sure you have active internet connection.'
+                .makeError);
         return;
       }
 
@@ -39,7 +40,8 @@ class _UpdateHelper {
       if (result.exitCode == 0) {
         stdout.writeln('🚀 Superpowers activated!'.makeCheck);
       } else {
-        stdout.writeln('Error updating publish package: ${result.stderr}'.makeError);
+        stdout.writeln(
+            'Error updating publish package: ${result.stderr}'.makeError);
       }
     } catch (e) {
       stdout.writeln('Error during update: $e');
@@ -53,7 +55,8 @@ class _UpdateHelper {
       final latestVersion = await _PubspecAPI.getLatestVersion("publish");
       if (latestVersion != null && latestVersion != installedVersion) {
         stdout.write(
-            'A new version of publish is available: $latestVersion. Would you like to update [y/n]?'.makeInfo);
+            'A new version of publish is available: $latestVersion. Would you like to update [y/n]?'
+                .makeInfo);
         final input = stdin.readLineSync();
         if (input?.toLowerCase() == 'y') {
           await update();
