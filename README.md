@@ -52,6 +52,13 @@ The signed app bundle will be generated in the `build/app/outputs/bundle/release
 
 ### App Configuration
 
+#### Check App Current Configuration:
+```bash
+publish --read-configs
+```
+
+This command will print the current app name and app ID for both Android and iOS platforms.
+
 #### Update App Name:
 To update the app name for both Android & iOS with single command:
 ```bash
