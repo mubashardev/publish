@@ -43,9 +43,9 @@ void _generateKeystore() {
   stdout.write("Enter key alias: ");
   alias = stdin.readLineSync();
 
-  stdout.write("Publisher's Common Name (i.e. Mubashar Hussain): ");
+  stdout.write("Publisher's Common Name (i.e. Mubashar Dev): ");
   String cn = (stdin.readLineSync() ?? "").trim();
-  cn = cn.isEmpty ? 'Mubashar Hussain' : cn;
+  cn = cn.isEmpty ? 'Mubashar Dev' : cn;
 
   stdout.write("Organizational Unit (i.e. MH): ");
   String ou = (stdin.readLineSync() ?? "").trim();
@@ -86,7 +86,7 @@ void _generateKeystore() {
       keyPass!.isEmpty ||
       keystorePass == null ||
       keystorePass!.isEmpty) {
-    stderr.writeln("All inputs that don't have default mentioned are required");
+    stderr.writeln("All inputs that don't have default mentioned are required".makeError);
     return;
   }
 
@@ -115,9 +115,10 @@ void _generateKeystore() {
     "-validity",
     "$days"
   ]);
-  stdout.write(res.stdout);
-  stderr.write(res.stderr);
-  stdout.writeln("generated keystore with provided input");
+  stdout.write(res.stdout.toString().withColor(yellow));
+  stderr.write(res.stderr.toString().withColor(yellow));
+  stdout.writeln("Generated keystore with provided inputs".makeCheck);
+  stdout.writeln("Now you can build the app by running 'flutter build appbundle'".makeCheck);
 }
 
 /// Creates key.properties file required by signing config in build.gradle file
@@ -127,7 +128,7 @@ keyPassword=$keyPass
 keyAlias=$alias
 storeFile=../../$keystorePath
 """);
-  stdout.writeln("key properties file created");
+  stdout.writeln("Key properties file created at $keyPropertiesPath".makeCheck);
 }
 
 /// configures build.gradle with release config with the generated key details

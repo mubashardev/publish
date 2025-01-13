@@ -31,7 +31,7 @@ class ReadAppConfigsCommand extends Command {
   void run() {
     if (!_Validator.isPubspecValid) {
       stdout.writeln(
-        "This directory doesn't seem to be a valid Flutter project.",
+        "This directory doesn't seem to be a valid Flutter project.".makeError,
       );
       return;
     }
@@ -83,7 +83,7 @@ class WriteAppConfigsCommand extends Command {
   void run() {
     if (!_Validator.isPubspecValid) {
       stdout.writeln(
-        "This directory doesn't seem to be a valid Flutter project.",
+        "This directory doesn't seem to be a valid Flutter project.".makeError,
       );
       return;
     }
@@ -113,8 +113,7 @@ class WriteAppNameConfigsCommand extends Command {
   void run() {
     if (!_Validator.isPubspecValid) {
       stdout.writeln(
-        "This directory doesn't seem to be a valid Flutter project."
-            .withColor(red),
+        "This directory doesn't seem to be a valid Flutter project.".makeError,
       );
       return;
     }
@@ -122,12 +121,11 @@ class WriteAppNameConfigsCommand extends Command {
     var value = argResults?['value'];
     if (value == null) {
       stdout.writeln(
-          'Please provide a name for your app. Example: flutter pub run publish app-name --value "My App"'
-              .withColor(red));
+          'Please provide a name for your app. Example: flutter pub run publish app-name --value "My App"'.makeWarning);
       return;
     }
     if (!_Validator.isValidAppName(value)) {
-      stdout.writeln('Invalid app name: $value'.withColor(red));
+      stdout.writeln('Invalid app name: $value'.makeError);
       return;
     }
 
@@ -136,11 +134,10 @@ class WriteAppNameConfigsCommand extends Command {
       try {
         var done = ConfigsHelper.updateName(value, platform);
         if (done) {
-          stdout.writeln('Successfully updated $platform app name to: $value'
-              .withColor(green));
+          stdout.writeln('Successfully updated $platform app name to: $value'.makeCheck);
         }
       } catch (e) {
-        stdout.writeln('Error updating $platform app name: $e'.withColor(red));
+        stdout.writeln('Error updating $platform app name: $e'.makeError);
       }
     }
   }
@@ -169,8 +166,7 @@ class WriteAppIdConfigsCommand extends Command {
   void run() {
     if (!_Validator.isPubspecValid) {
       stdout.writeln(
-        "This directory doesn't seem to be a valid Flutter project."
-            .withColor(red),
+        "This directory doesn't seem to be a valid Flutter project.".makeError,
       );
       return;
     }
@@ -178,8 +174,7 @@ class WriteAppIdConfigsCommand extends Command {
     var value = argResults?['value'];
     if (value == null) {
       stdout.writeln(
-          'Please provide a name for your app. Example: flutter pub run publish app-id --value "com.myapp"'
-              .withColor(red));
+          'Please provide a name for your app. Example: flutter pub run publish app-id --value "com.myapp"'.makeWarning);
       return;
     }
     if (!_Validator.isValidAppId(value)) {
@@ -193,11 +188,11 @@ class WriteAppIdConfigsCommand extends Command {
         var done = ConfigsHelper.updateId(value, platform);
         if (done) {
           stdout.writeln(
-              'Successfully set $platform app id to: $value'.withColor(green));
+              'Successfully set $platform app id to: $value'.makeCheck);
         }
       } catch (e) {
         stdout.writeln(
-            'Failed to set $platform app id to: $value'.withColor(red));
+            'Failed to set $platform app id to: $value'.makeError);
       }
     }
   }
@@ -228,15 +223,15 @@ class AndroidSignCommand extends Command {
   void run() {
     if (!_Validator.isPubspecValid) {
       stdout.writeln(
-          'This directory doesn\'t seem to be a valid Flutter project.');
+          'This directory doesn\'t seem to be a valid Flutter project.'.makeError);
       return;
     } else if (!_Validator.isAndroidManifestValid) {
       stdout.writeln(
-          'Your Flutter project doesn\'t have a valid AndroidManifest.xml file.');
+          'Your Flutter project doesn\'t have a valid AndroidManifest.xml file.'.makeError);
       return;
     } else if (!_Validator.isGradleValid) {
       stdout.writeln(
-          'Your Flutter android project doesn\'t have a valid build.gradle file.');
+          'Your Flutter android project doesn\'t have a valid build.gradle file.'.makeError);
       return;
     }
 

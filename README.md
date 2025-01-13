@@ -29,7 +29,7 @@
 #### Generate Signing Key and Configure Files:
 Use this command in your project terminal to automatically generate a signing key and set up your Android project for release:
 ```bash
-publish --sign-android
+publish sign-android
 ```
 
 This will:

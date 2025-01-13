@@ -69,42 +69,28 @@ class _AndroidConfigs {
   }
 
   static void setAppId(String id) {
-    // Read the build.gradle file as a string
-    String bfString = _Commons.getFileAsString(_Commons.appBuildPath);
+    List<String> buildfile = _Commons.getFileAsLines(_Commons.appBuildPath);
 
-    // Match defaultConfig block
-    RegExp defaultConfigRegex = RegExp(
-      r"defaultConfig\s*\{([\s\S]*?)\}",
-      multiLine: true,
+    // Regex to match both formats
+    RegExp applicationIdRegex = RegExp(
+      r"""applicationId\s*(=|)\s*['"][^'"]+['"]""",
     );
 
-    RegExpMatch? defaultConfigMatch = defaultConfigRegex.firstMatch(bfString);
-
-    if (defaultConfigMatch != null) {
-      String defaultConfigBlock = defaultConfigMatch.group(1)!;
-
-      // Match applicationId inside defaultConfig block (supports both formats)
-      RegExp applicationIdRegex = RegExp(
-        r"""applicationId\s*(?:=|)\s*['"]([^'"]+)['"]""",
-      );
-
-      RegExpMatch? applicationIdMatch =
-          applicationIdRegex.firstMatch(defaultConfigBlock);
-
-      if (applicationIdMatch != null) {
-        // Replace the applicationId with the new one
-        defaultConfigBlock = defaultConfigBlock.replaceAll(
-            RegExp(r"""applicationId\s*(?:=|)\s*['"]([^'"]+)['"]"""),
-            "applicationId = '$id'");
-
-        // Write the modified string back to the file
-        bfString = bfString.replaceAll(defaultConfigRegex, defaultConfigBlock);
-        File(_Commons.appBuildPath).writeAsStringSync(bfString);
+    buildfile = buildfile.map((line) {
+      if (applicationIdRegex.hasMatch(line)) {
+        // Determine the existing format
+        if (line.contains('=')) {
+          // New format: applicationId = "..."
+          return "applicationId = '$appId'";
+        } else {
+          // Old format: applicationId "..."
+          return "applicationId '$appId'";
+        }
       } else {
-        throw Exception("applicationId not found in defaultConfig block.");
+        return line;
       }
-    } else {
-      throw Exception("defaultConfig block not found.");
-    }
+    }).toList();
+
+    _Commons.writeStringToFile(_Commons.appBuildPath, buildfile.join("\n"));
   }
 }
