@@ -86,7 +86,8 @@ void _generateKeystore() {
       keyPass!.isEmpty ||
       keystorePass == null ||
       keystorePass!.isEmpty) {
-    stderr.writeln("All inputs that don't have default mentioned are required".makeError);
+    stderr.writeln(
+        "All inputs that don't have default mentioned are required".makeError);
     return;
   }
 
@@ -118,7 +119,9 @@ void _generateKeystore() {
   stdout.write(res.stdout.toString().withColor(yellow));
   stderr.write(res.stderr.toString().withColor(yellow));
   stdout.writeln("Generated keystore with provided inputs".makeCheck);
-  stdout.writeln("Now you can build the app by running 'flutter build appbundle'".makeCheck);
+  stdout.writeln(
+      "Now you can build the app by running 'flutter build appbundle'"
+          .makeCheck);
 }
 
 /// Creates key.properties file required by signing config in build.gradle file
