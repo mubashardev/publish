@@ -81,10 +81,10 @@ class _AndroidConfigs {
         // Determine the existing format
         if (line.contains('=')) {
           // New format: applicationId = "..."
-          return "applicationId = '$appId'";
+          return "applicationId = '$id'";
         } else {
           // Old format: applicationId "..."
-          return "applicationId '$appId'";
+          return "applicationId '$id'";
         }
       } else {
         return line;
