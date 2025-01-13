@@ -4,7 +4,8 @@ class _Commons {
   static final String basePath = "./lib";
   // static final String pubspecPath = './pubspec.yaml';
   static final String appBuildPath = "./android/app/build.gradle";
-  static final String appManifestPath = "./android/app/src/main/AndroidManifest.xml";
+  static final String appManifestPath =
+      "./android/app/src/main/AndroidManifest.xml";
   static final String iosPlistPath = './ios/Runner/Info.plist';
   static final String iosPbxprojPath = './ios/Runner.xcodeproj/project.pbxproj';
 

@@ -1,6 +1,5 @@
 part of '../publish.dart';
 
-
 class _Validator {
   static bool get isPubspecExists => File("./pubspec.yaml").existsSync();
 
@@ -19,11 +18,11 @@ class _Validator {
 
   static bool get isAndroidManifestValid {
     if (!isAndroidManifestExists) return false;
-    
+
     try {
       // Read the XML file
-      final xmlString = File("./android/app/src/main/AndroidManifest.xml")
-          .readAsStringSync();
+      final xmlString =
+          File("./android/app/src/main/AndroidManifest.xml").readAsStringSync();
       // Parse the XML
       XmlDocument.parse(xmlString);
       return true; // The XML is valid
@@ -58,7 +57,8 @@ class _Validator {
     }
   }
 
-  static bool get isPbxprojExists => File("./ios/Runner.xcodeproj/project.pbxproj").existsSync();
+  static bool get isPbxprojExists =>
+      File("./ios/Runner.xcodeproj/project.pbxproj").existsSync();
   static bool get isPbxprojValid {
     if (!isPbxprojExists) return false;
     try {
@@ -73,10 +73,10 @@ class _Validator {
   static bool get isValidAndroid => isAndroidManifestValid && isGradleValid;
   static bool get isValidIos => isPlistValid && isPbxprojValid;
 
-
   static bool isValidAppId(String appId) {
     // Regular expression to validate the app ID
-    final appIdRegex = RegExp(r'^([A-Za-z]{1}[A-Za-z\d_]*\.)+[A-Za-z][A-Za-z\d_]*$');
+    final appIdRegex =
+        RegExp(r'^([A-Za-z]{1}[A-Za-z\d_]*\.)+[A-Za-z][A-Za-z\d_]*$');
 
     // Check if the app ID matches the pattern
     return appIdRegex.hasMatch(appId);

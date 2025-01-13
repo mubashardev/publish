@@ -17,7 +17,8 @@ class _AndroidConfigs {
     if (appNameMatch != null) {
       return appNameMatch.group(1)!;
     } else {
-      throw Exception("App name not found or improperly formatted in AndroidManifest.xml.");
+      throw Exception(
+          "App name not found or improperly formatted in AndroidManifest.xml.");
     }
   }
 
