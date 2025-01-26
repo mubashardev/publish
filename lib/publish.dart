@@ -176,7 +176,7 @@ class WriteAppIdConfigsCommand extends Command {
     var value = argResults?['value'];
     if (value == null) {
       stdout.writeln(
-          'Please provide a name for your app. Example: flutter pub run publish app-id --value "com.myapp"'
+          'Please provide an app id. Example: flutter pub run publish app-id --value "com.myapp"'
               .makeWarning);
       return;
     }

@@ -1,7 +1,7 @@
-# 1.1.3
-Update README to correct app-id command syntax
+# 1.1.4
+ - Update a dependency to the latest release. 
 
-# 1.1.2
+# 1.1.3
  - Fixed bug in build.gradle default block. 
  - Enhanced error messages for invalid input.
 
