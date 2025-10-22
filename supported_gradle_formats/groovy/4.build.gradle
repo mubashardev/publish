@@ -1,0 +1,66 @@
+// Format 4: Groovy with applicationId using single quotes and extended dependencies
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+apply plugin: 'com.google.gms.google-services'
+
+ext {
+    compileSdk = 33
+    minSdk = 21
+    targetSdk = 33
+}
+
+android {
+    compileSdkVersion compileSdk
+
+    defaultConfig {
+        applicationId 'com.mycompany.app'
+        minSdkVersion minSdk
+        targetSdkVersion targetSdk
+        versionCode 42
+        versionName '3.1.5'
+        multiDexEnabled true
+    }
+
+    buildFeatures {
+        viewBinding true
+        dataBinding true
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+            applicationIdSuffix '.debug'
+        }
+        release {
+            debuggable false
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
+    implementation 'com.google.android.material:material:1.7.0'
+    implementation 'com.firebase:firebase-bom:31.0.0'
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+    implementation 'com.google.firebase:firebase-messaging-ktx'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.4'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
+}
