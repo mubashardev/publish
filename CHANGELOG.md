@@ -1,3 +1,8 @@
+# 1.1.5
+ - Added support for multiple build.gradle file formats (Groovy and Kotlin DSL).
+ - Enhanced gradle parser to handle various applicationId syntax patterns.
+ - Added comprehensive gradle format examples in supported_gradle_formats folder.
+
 # 1.1.4
  - Update a dependency to the latest release. 
 
