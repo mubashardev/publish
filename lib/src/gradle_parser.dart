@@ -39,12 +39,13 @@ class _GradleParser {
     if (ktsMatch1 != null) {
       return ktsMatch1.group(1)!;
     }
-    
+
     // Try with single quotes
     RegExp ktsFormat1Single = RegExp(
       r"applicationId\s*=\s*'([^']+)'",
     );
-    RegExpMatch? ktsMatch1Single = ktsFormat1Single.firstMatch(defaultConfigBlock);
+    RegExpMatch? ktsMatch1Single =
+        ktsFormat1Single.firstMatch(defaultConfigBlock);
     if (ktsMatch1Single != null) {
       return ktsMatch1Single.group(1)!;
     }
@@ -57,12 +58,13 @@ class _GradleParser {
     if (ktsMatch2 != null) {
       return ktsMatch2.group(1)!;
     }
-    
+
     // Try with single quotes
     RegExp ktsFormat2Single = RegExp(
       r"applicationId\s*\(\s*'([^']+)'\s*\)",
     );
-    RegExpMatch? ktsMatch2Single = ktsFormat2Single.firstMatch(defaultConfigBlock);
+    RegExpMatch? ktsMatch2Single =
+        ktsFormat2Single.firstMatch(defaultConfigBlock);
     if (ktsMatch2Single != null) {
       return ktsMatch2Single.group(1)!;
     }
@@ -75,12 +77,13 @@ class _GradleParser {
     if (groovyMatch != null) {
       return groovyMatch.group(1)!;
     }
-    
+
     // Try with single quotes
     RegExp groovyOldFormatSingle = RegExp(
       r"applicationId\s+'([^']+)'",
     );
-    RegExpMatch? groovyMatchSingle = groovyOldFormatSingle.firstMatch(defaultConfigBlock);
+    RegExpMatch? groovyMatchSingle =
+        groovyOldFormatSingle.firstMatch(defaultConfigBlock);
     if (groovyMatchSingle != null) {
       return groovyMatchSingle.group(1)!;
     }

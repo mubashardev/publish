@@ -19,17 +19,17 @@ class _ConsoleUI {
   static void printHeader(String title, {String? subtitle}) {
     final width = 60;
     final paddedTitle = _centerText(title, width - 4);
-    
+
     stdout.writeln('');
     stdout.writeln('$_cornerTL${_horizontal * (width - 2)}$_cornerTR');
     stdout.writeln('$_vertical$paddedTitle$_vertical');
-    
+
     if (subtitle != null) {
       final paddedSubtitle = _centerText(subtitle, width - 4);
       stdout.writeln('$_tee${_horizontal * (width - 2)}$_tee');
       stdout.writeln('$_vertical$paddedSubtitle$_vertical');
     }
-    
+
     stdout.writeln('$_cornerBL${_horizontal * (width - 2)}$_cornerBR');
     stdout.writeln('');
   }
@@ -42,7 +42,8 @@ class _ConsoleUI {
     for (final line in lines) {
       stdout.writeln('  ${cyan}│$reset  $line');
     }
-    stdout.writeln('  ${cyan}└──────────────────────────────────────────────────────────$reset');
+    stdout.writeln(
+        '  ${cyan}└──────────────────────────────────────────────────────────$reset');
     stdout.writeln('');
   }
 
@@ -89,12 +90,12 @@ class _ConsoleUI {
   static String? prompt(String message, {bool required = false}) {
     stdout.write('\n  ${cyan}?$reset  $message: ');
     final input = stdin.readLineSync();
-    
+
     if (required && (input == null || input.isEmpty)) {
       printError('This field is required');
       return prompt(message, required: required);
     }
-    
+
     return input;
   }
 
@@ -104,11 +105,11 @@ class _ConsoleUI {
     final defaultIndicator = defaultYes ? '[Y/n]' : '[y/N]';
     stdout.write('\n  ${cyan}?$reset  $message $defaultIndicator: ');
     final input = stdin.readLineSync()?.toLowerCase() ?? '';
-    
+
     if (input.isEmpty) {
       return defaultYes;
     }
-    
+
     return input == 'y' || input == 'yes';
   }
 
@@ -116,14 +117,15 @@ class _ConsoleUI {
   // ignore: unused_element
   static String? promptSelect(String message, List<String> options) {
     stdout.writeln('\n  ${cyan}?$reset  $message');
-    
+
     for (int i = 0; i < options.length; i++) {
       stdout.writeln('    ${cyan}${i + 1}${reset}) ${options[i]}');
     }
-    
-    stdout.write('\n  ${cyan}?$reset  Enter your choice (1-${options.length}): ');
+
+    stdout
+        .write('\n  ${cyan}?$reset  Enter your choice (1-${options.length}): ');
     final input = stdin.readLineSync();
-    
+
     try {
       final index = int.parse(input ?? '') - 1;
       if (index >= 0 && index < options.length) {
@@ -147,16 +149,16 @@ class _ConsoleUI {
     List<int>? columnWidths,
   }) {
     printHeader(title);
-    
+
     // Calculate column widths
     columnWidths ??= headers.map((h) => h.length).toList();
-    
+
     for (int i = 0; i < rows.length; i++) {
       for (int j = 0; j < rows[i].length; j++) {
         columnWidths[j] = _max(columnWidths[j], rows[i][j].length);
       }
     }
-    
+
     // Print headers
     final headerLine = headers
         .asMap()
@@ -164,13 +166,11 @@ class _ConsoleUI {
         .map((e) => e.value.padRight(columnWidths![e.key]))
         .join(' ${cyan}│$reset ');
     stdout.writeln('  ${cyan}$headerLine$reset');
-    
+
     // Print separator
-    final separator = columnWidths
-        .map((w) => '─' * w)
-        .join('─${cyan}┼$reset─');
+    final separator = columnWidths.map((w) => '─' * w).join('─${cyan}┼$reset─');
     stdout.writeln('  ${cyan}$separator$reset');
-    
+
     // Print rows
     for (final row in rows) {
       final rowLine = row
@@ -180,7 +180,7 @@ class _ConsoleUI {
           .join(' ${cyan}│$reset ');
       stdout.writeln('  $rowLine');
     }
-    
+
     stdout.writeln('');
   }
 

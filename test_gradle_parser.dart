@@ -1,22 +1,23 @@
 #!/usr/bin/env dart
+
 /// Test script to manually validate all gradle sample formats
 import 'dart:io';
 
 void main() {
   print('🧪 Testing Gradle Parser with all sample formats\n');
-  
+
   // Test Groovy samples
   print('═' * 60);
   print('📄 GROOVY FORMAT SAMPLES (build.gradle)');
   print('═' * 60);
   testGroovySamples();
-  
+
   // Test KTS samples
   print('\n═' * 60);
   print('🔷 KOTLIN DSL FORMAT SAMPLES (build.gradle.kts)');
   print('═' * 60);
   testKtsSamples();
-  
+
   print('\n✅ All samples validated successfully!\n');
 }
 
@@ -26,25 +27,26 @@ void testGroovySamples() {
     print('❌ Groovy samples directory not found');
     return;
   }
-  
-  final files = groovyDir.listSync()
+
+  final files = groovyDir
+      .listSync()
       .whereType<File>()
       .where((f) => f.path.endsWith('.gradle'))
       .toList()
     ..sort((a, b) => a.path.compareTo(b.path));
-  
+
   print('\nFound ${files.length} Groovy samples:\n');
-  
+
   for (final file in files) {
     final content = file.readAsStringSync();
     final fileName = file.path.split('/').last;
-    
+
     try {
       final appId = extractApplicationId(content);
       if (appId != null) {
         print('✓ $fileName');
         print('  📦 applicationId: $appId');
-        
+
         // Check expected patterns for this file
         if (fileName == '1.build.gradle') {
           if (appId == 'com.example.app') {
@@ -83,25 +85,26 @@ void testKtsSamples() {
     print('❌ KTS samples directory not found');
     return;
   }
-  
-  final files = ktsDir.listSync()
+
+  final files = ktsDir
+      .listSync()
       .whereType<File>()
       .where((f) => f.path.endsWith('.kts'))
       .toList()
     ..sort((a, b) => a.path.compareTo(b.path));
-  
+
   print('\nFound ${files.length} KTS samples:\n');
-  
+
   for (final file in files) {
     final content = file.readAsStringSync();
     final fileName = file.path.split('/').last;
-    
+
     try {
       final appId = extractApplicationId(content);
       if (appId != null) {
         print('✓ $fileName');
         print('  📦 applicationId: $appId');
-        
+
         // Check expected patterns for this file
         if (fileName == '1.build.gradle.kts') {
           if (appId == 'com.example.app') {
@@ -158,7 +161,8 @@ String? extractApplicationId(String content) {
 
   // Try with single quotes
   RegExp ktsFormat1Single = RegExp(r"applicationId\s*=\s*'([^']+)'");
-  RegExpMatch? ktsMatch1Single = ktsFormat1Single.firstMatch(defaultConfigBlock);
+  RegExpMatch? ktsMatch1Single =
+      ktsFormat1Single.firstMatch(defaultConfigBlock);
   if (ktsMatch1Single != null) {
     return ktsMatch1Single.group(1)!;
   }
@@ -172,7 +176,8 @@ String? extractApplicationId(String content) {
 
   // Try with single quotes
   RegExp ktsFormat2Single = RegExp(r"applicationId\s*\(\s*'([^']+)'\s*\)");
-  RegExpMatch? ktsMatch2Single = ktsFormat2Single.firstMatch(defaultConfigBlock);
+  RegExpMatch? ktsMatch2Single =
+      ktsFormat2Single.firstMatch(defaultConfigBlock);
   if (ktsMatch2Single != null) {
     return ktsMatch2Single.group(1)!;
   }
@@ -186,7 +191,8 @@ String? extractApplicationId(String content) {
 
   // Try with single quotes
   RegExp groovyOldFormatSingle = RegExp(r"applicationId\s+'([^']+)'");
-  RegExpMatch? groovyMatchSingle = groovyOldFormatSingle.firstMatch(defaultConfigBlock);
+  RegExpMatch? groovyMatchSingle =
+      groovyOldFormatSingle.firstMatch(defaultConfigBlock);
   if (groovyMatchSingle != null) {
     return groovyMatchSingle.group(1)!;
   }

@@ -42,8 +42,9 @@ class ReadAppConfigsCommand extends Command {
     final validIos = _Validator.isValidIos;
 
     if (validAndroid || validIos) {
-      _ConsoleUI.printHeader('🚀 Application Details', subtitle: 'Flutter Project Configuration');
-      
+      _ConsoleUI.printHeader('🚀 Application Details',
+          subtitle: 'Flutter Project Configuration');
+
       if (validAndroid) {
         try {
           final androidName = _AndroidConfigs.appName;
@@ -56,7 +57,7 @@ class ReadAppConfigsCommand extends Command {
           _ConsoleUI.printError('Failed to read Android config: $e');
         }
       }
-      
+
       if (validIos) {
         try {
           final iosName = _IosConfigs.appName;
@@ -70,7 +71,8 @@ class ReadAppConfigsCommand extends Command {
         }
       }
     } else {
-      _ConsoleUI.printError('No valid Android or iOS configuration found in this project');
+      _ConsoleUI.printError(
+          'No valid Android or iOS configuration found in this project');
     }
   }
 }
@@ -138,14 +140,15 @@ class WriteAppNameConfigsCommand extends Command {
     }
 
     if (!_Validator.isValidAppName(value)) {
-      _ConsoleUI.printError('Invalid app name: $value\n  App names must contain only letters and spaces');
+      _ConsoleUI.printError(
+          'Invalid app name: $value\n  App names must contain only letters and spaces');
       return;
     }
 
     var platforms = (argResults?['platforms'] ?? "android,ios").split(',');
-    
+
     _ConsoleUI.printHeader('📝 Updating App Name', subtitle: value);
-    
+
     for (var platform in platforms) {
       platform = platform.trim();
       try {
@@ -193,7 +196,8 @@ class WriteAppIdConfigsCommand extends Command {
     var value = argResults?['value'];
     if (value == null) {
       _ConsoleUI.printWarning('No app ID provided via --value flag');
-      value = _ConsoleUI.prompt('Enter new app ID (package name)', required: true);
+      value =
+          _ConsoleUI.prompt('Enter new app ID (package name)', required: true);
       if (value == null || value.isEmpty) {
         _ConsoleUI.printError('App ID cannot be empty');
         return;
@@ -208,7 +212,7 @@ class WriteAppIdConfigsCommand extends Command {
     }
 
     var platforms = (argResults?['platforms'] ?? "android,ios").split(',');
-    
+
     _ConsoleUI.printHeader('📦 Updating App ID', subtitle: value);
 
     for (var platform in platforms) {
@@ -267,7 +271,8 @@ class AndroidSignCommand extends Command {
       return;
     }
 
-    _ConsoleUI.printHeader('🔐 Android App Signing Setup', subtitle: 'Generate keystore and configure signing');
+    _ConsoleUI.printHeader('🔐 Android App Signing Setup',
+        subtitle: 'Generate keystore and configure signing');
 
     _UpdateHelper.checkIfUpdateAvailable().then((_) {
       _androidSign(); // Calls your existing signing logic

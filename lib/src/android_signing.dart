@@ -137,13 +137,13 @@ storeFile=../../$keystorePath
 /// configures build.gradle/build.gradle.kts with release config with the generated key details
 void _configureBuildConfig() {
   String bfString = _Commons.getFileAsString(_Commons.appBuildPath);
-  String buildFileType = _GradleParser.detectBuildFileType(_Commons.appBuildPath);
-  
+  String buildFileType =
+      _GradleParser.detectBuildFileType(_Commons.appBuildPath);
+
   if (!bfString.contains("def keystoreProperties") &&
       !bfString.contains("keystoreProperties['keyAlias']") &&
       !bfString.contains('val keystoreProperties') &&
       !bfString.contains('keystoreProperties["keyAlias"]')) {
-    
     String updated;
     if (buildFileType == 'kts') {
       // Kotlin DSL format (build.gradle.kts)
@@ -152,7 +152,7 @@ void _configureBuildConfig() {
       // Groovy format (build.gradle)
       updated = _configureBuildConfigGroovy(bfString);
     }
-    
+
     _Commons.writeStringToFile(_Commons.appBuildPath, updated);
     stdout.writeln("configured release configs");
   } else {
@@ -163,7 +163,7 @@ void _configureBuildConfig() {
 /// Configures Groovy build.gradle file
 String _configureBuildConfigGroovy(String content) {
   List<String> buildfile = content.split('\n');
-  
+
   buildfile = buildfile.map((line) {
     if (line.contains(RegExp("android.*{"))) {
       return """
@@ -193,14 +193,14 @@ String _configureBuildConfigGroovy(String content) {
       return line;
     }
   }).toList();
-  
+
   return buildfile.join("\n");
 }
 
 /// Configures Kotlin DSL build.gradle.kts file
 String _configureBuildConfigKts(String content) {
   List<String> buildfile = content.split('\n');
-  
+
   buildfile = buildfile.map((line) {
     if (line.contains(RegExp("android\\s*\\{"))) {
       return """
@@ -224,14 +224,14 @@ String _configureBuildConfigKts(String content) {
     }
     buildTypes {
               """;
-    } else if (line.contains("signingConfig = signingConfigs.debug") || 
-               line.contains("signingConfig signingConfigs.debug")) {
+    } else if (line.contains("signingConfig = signingConfigs.debug") ||
+        line.contains("signingConfig signingConfigs.debug")) {
       return '            signingConfig = signingConfigs.getByName("release")';
     } else {
       return line;
     }
   }).toList();
-  
+
   return buildfile.join("\n");
 }
 
