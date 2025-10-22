@@ -23,35 +23,16 @@ class _AndroidConfigs {
   }
 
   static String get appId {
-    // Read the build.gradle file as a string
+    // Read the build.gradle or build.gradle.kts file as a string
     String bfString = _Commons.getFileAsString(_Commons.appBuildPath);
 
-    // Match defaultConfig block
-    RegExp defaultConfigRegex = RegExp(
-      r"defaultConfig\s*\{([\s\S]*?)\}",
-      multiLine: true,
-    );
+    // Use universal parser to extract applicationId
+    String? appId = _GradleParser.extractApplicationId(bfString);
 
-    RegExpMatch? defaultConfigMatch = defaultConfigRegex.firstMatch(bfString);
-
-    if (defaultConfigMatch != null) {
-      String defaultConfigBlock = defaultConfigMatch.group(1)!;
-
-      // Match applicationId inside defaultConfig block (supports both formats)
-      RegExp applicationIdRegex = RegExp(
-        r"""applicationId\s*(?:=|)\s*['"]([^'"]+)['"]""",
-      );
-
-      RegExpMatch? applicationIdMatch =
-          applicationIdRegex.firstMatch(defaultConfigBlock);
-
-      if (applicationIdMatch != null) {
-        return applicationIdMatch.group(1)!; // Extract the applicationId
-      } else {
-        throw Exception("applicationId not found in defaultConfig block.");
-      }
+    if (appId != null) {
+      return appId;
     } else {
-      throw Exception("defaultConfig block not found.");
+      throw Exception("applicationId not found in build file.");
     }
   }
 
@@ -69,28 +50,11 @@ class _AndroidConfigs {
   }
 
   static void setAppId(String id) {
-    List<String> buildfile = _Commons.getFileAsLines(_Commons.appBuildPath);
+    String bfString = _Commons.getFileAsString(_Commons.appBuildPath);
 
-    // Regex to match both formats
-    RegExp applicationIdRegex = RegExp(
-      r"""applicationId\s*(=|)\s*['"][^'"]+['"]""",
-    );
+    // Use universal parser to replace applicationId
+    String updated = _GradleParser.replaceApplicationId(bfString, id);
 
-    buildfile = buildfile.map((line) {
-      if (applicationIdRegex.hasMatch(line)) {
-        // Determine the existing format
-        if (line.contains('=')) {
-          // New format: applicationId = "..."
-          return "applicationId = '$id'";
-        } else {
-          // Old format: applicationId "..."
-          return "applicationId '$id'";
-        }
-      } else {
-        return line;
-      }
-    }).toList();
-
-    _Commons.writeStringToFile(_Commons.appBuildPath, buildfile.join("\n"));
+    _Commons.writeStringToFile(_Commons.appBuildPath, updated);
   }
 }

@@ -134,15 +134,39 @@ storeFile=../../$keystorePath
   stdout.writeln("Key properties file created at $keyPropertiesPath".makeCheck);
 }
 
-/// configures build.gradle with release config with the generated key details
+/// configures build.gradle/build.gradle.kts with release config with the generated key details
 void _configureBuildConfig() {
   String bfString = _Commons.getFileAsString(_Commons.appBuildPath);
-  List<String> buildfile = _Commons.getFileAsLines(_Commons.appBuildPath);
-  if (!bfString.contains("deft keystoreProperties") &&
-      !bfString.contains("keystoreProperties['keyAlias']")) {
-    buildfile = buildfile.map((line) {
-      if (line.contains(RegExp("android.*{"))) {
-        return """
+  String buildFileType = _GradleParser.detectBuildFileType(_Commons.appBuildPath);
+  
+  if (!bfString.contains("def keystoreProperties") &&
+      !bfString.contains("keystoreProperties['keyAlias']") &&
+      !bfString.contains('val keystoreProperties') &&
+      !bfString.contains('keystoreProperties["keyAlias"]')) {
+    
+    String updated;
+    if (buildFileType == 'kts') {
+      // Kotlin DSL format (build.gradle.kts)
+      updated = _configureBuildConfigKts(bfString);
+    } else {
+      // Groovy format (build.gradle)
+      updated = _configureBuildConfigGroovy(bfString);
+    }
+    
+    _Commons.writeStringToFile(_Commons.appBuildPath, updated);
+    stdout.writeln("configured release configs");
+  } else {
+    stdout.writeln("release configs already configured");
+  }
+}
+
+/// Configures Groovy build.gradle file
+String _configureBuildConfigGroovy(String content) {
+  List<String> buildfile = content.split('\n');
+  
+  buildfile = buildfile.map((line) {
+    if (line.contains(RegExp("android.*{"))) {
+      return """
   def keystoreProperties = new Properties()
   def keystorePropertiesFile = rootProject.file('key.properties')
   if (keystorePropertiesFile.exists()) {
@@ -151,8 +175,8 @@ void _configureBuildConfig() {
 
   android {
               """;
-      } else if (line.contains(RegExp("buildTypes.*{"))) {
-        return """
+    } else if (line.contains(RegExp("buildTypes.*{"))) {
+      return """
     signingConfigs {
         release {
             keyAlias keystoreProperties['keyAlias']
@@ -163,42 +187,59 @@ void _configureBuildConfig() {
     }
     buildTypes {
               """;
-      } else if (line.contains("signingConfig signingConfigs.debug")) {
-        return "            signingConfig signingConfigs.release";
-      } else {
-        return line;
-      }
-    }).toList();
-
-    _Commons.writeStringToFile(_Commons.appBuildPath, buildfile.join("\n"));
-    stdout.writeln("configured release configs");
-  } else {
-    stdout.writeln("release configs already configured");
-  }
-}
-
-void _setAppId(String appId) {
-  List<String> buildfile = _Commons.getFileAsLines(_Commons.appBuildPath);
-
-  // Regex to match both formats
-  RegExp applicationIdRegex = RegExp(
-    r"""applicationId\s*(=|)\s*['"][^'"]+['"]""",
-  );
-
-  buildfile = buildfile.map((line) {
-    if (applicationIdRegex.hasMatch(line)) {
-      // Determine the existing format
-      if (line.contains('=')) {
-        // New format: applicationId = "..."
-        return "applicationId = '$appId'";
-      } else {
-        // Old format: applicationId "..."
-        return "applicationId '$appId'";
-      }
+    } else if (line.contains("signingConfig signingConfigs.debug")) {
+      return "            signingConfig signingConfigs.release";
     } else {
       return line;
     }
   }).toList();
+  
+  return buildfile.join("\n");
+}
 
-  _Commons.writeStringToFile(_Commons.appBuildPath, buildfile.join("\n"));
+/// Configures Kotlin DSL build.gradle.kts file
+String _configureBuildConfigKts(String content) {
+  List<String> buildfile = content.split('\n');
+  
+  buildfile = buildfile.map((line) {
+    if (line.contains(RegExp("android\\s*\\{"))) {
+      return """
+  val keystoreProperties = Properties()
+  val keystorePropertiesFile = rootProject.file("key.properties")
+  if (keystorePropertiesFile.exists()) {
+      keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
+  }
+
+  android {
+              """;
+    } else if (line.contains(RegExp("buildTypes\\s*\\{"))) {
+      return """
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            storeFile = file(keystoreProperties["storeFile"] as String?)
+            storePassword = keystoreProperties["storePassword"] as String?
+        }
+    }
+    buildTypes {
+              """;
+    } else if (line.contains("signingConfig = signingConfigs.debug") || 
+               line.contains("signingConfig signingConfigs.debug")) {
+      return '            signingConfig = signingConfigs.getByName("release")';
+    } else {
+      return line;
+    }
+  }).toList();
+  
+  return buildfile.join("\n");
+}
+
+void _setAppId(String appId) {
+  String bfString = _Commons.getFileAsString(_Commons.appBuildPath);
+
+  // Use universal parser to replace applicationId
+  String updated = _GradleParser.replaceApplicationId(bfString, appId);
+
+  _Commons.writeStringToFile(_Commons.appBuildPath, updated);
 }

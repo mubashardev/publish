@@ -12,6 +12,8 @@ import 'src/constants.dart';
 
 part 'src/android_signing.dart';
 part 'src/commons.dart';
+part 'src/console_ui.dart';
+part 'src/gradle_parser.dart';
 part 'src/pubspec_api.dart';
 part 'src/update_helper.dart';
 part 'src/validator.dart';
@@ -40,29 +42,36 @@ class ReadAppConfigsCommand extends Command {
     final validIos = _Validator.isValidIos;
 
     if (validAndroid || validIos) {
-      stdout.writeln('\n==============================');
-      stdout.writeln('${cyan}🚀 Application Details$reset');
-      stdout.writeln('==============================\n');
+      _ConsoleUI.printHeader('🚀 Application Details', subtitle: 'Flutter Project Configuration');
+      
       if (validAndroid) {
-        printAppDetails(
-            "📱 Android", _AndroidConfigs.appName, _AndroidConfigs.appId);
+        try {
+          final androidName = _AndroidConfigs.appName;
+          final androidId = _AndroidConfigs.appId;
+          _ConsoleUI.printSection('📱 Android Configuration', [
+            'App Name: ${green}$androidName$reset',
+            'Package Name: ${blue}$androidId$reset',
+          ]);
+        } catch (e) {
+          _ConsoleUI.printError('Failed to read Android config: $e');
+        }
       }
-      if (validAndroid && validIos) {
-        stdout.writeln('\n------------------------------\n');
-      }
+      
       if (validIos) {
-        printAppDetails("🍎 iOS", _IosConfigs.appName, _IosConfigs.appId);
+        try {
+          final iosName = _IosConfigs.appName;
+          final iosId = _IosConfigs.appId;
+          _ConsoleUI.printSection('🍎 iOS Configuration', [
+            'App Name: ${green}$iosName$reset',
+            'Bundle ID: ${blue}$iosId$reset',
+          ]);
+        } catch (e) {
+          _ConsoleUI.printError('Failed to read iOS config: $e');
+        }
       }
-      stdout.writeln('\n==============================\n');
+    } else {
+      _ConsoleUI.printError('No valid Android or iOS configuration found in this project');
     }
-  }
-
-  /// Prints app and package details for Android and iOS in a formatted and colorful manner.
-  static void printAppDetails(String type, String appName, String appId) {
-    // Android section
-    stdout.writeln('${yellow}$type Details:$reset');
-    stdout.writeln('\tApp Name:\t\t${green}$appName$reset');
-    stdout.writeln('\t  App ID:\t\t${blue}$appId$reset');
   }
 }
 
@@ -120,26 +129,34 @@ class WriteAppNameConfigsCommand extends Command {
 
     var value = argResults?['value'];
     if (value == null) {
-      stdout.writeln(
-          'Please provide a name for your app. Example: flutter pub run publish app-name --value "My App"'
-              .makeWarning);
-      return;
+      _ConsoleUI.printWarning('No app name provided via --value flag');
+      value = _ConsoleUI.prompt('Enter new app name', required: true);
+      if (value == null || value.isEmpty) {
+        _ConsoleUI.printError('App name cannot be empty');
+        return;
+      }
     }
+
     if (!_Validator.isValidAppName(value)) {
-      stdout.writeln('Invalid app name: $value'.makeError);
+      _ConsoleUI.printError('Invalid app name: $value\n  App names must contain only letters and spaces');
       return;
     }
 
     var platforms = (argResults?['platforms'] ?? "android,ios").split(',');
+    
+    _ConsoleUI.printHeader('📝 Updating App Name', subtitle: value);
+    
     for (var platform in platforms) {
+      platform = platform.trim();
       try {
         var done = ConfigsHelper.updateName(value, platform);
         if (done) {
-          stdout.writeln(
-              'Successfully updated $platform app name to: $value'.makeCheck);
+          _ConsoleUI.printSuccess('Updated $platform app name to: $value');
+        } else {
+          _ConsoleUI.printWarning('Skipped $platform (not configured)');
         }
       } catch (e) {
-        stdout.writeln('Error updating $platform app name: $e'.makeError);
+        _ConsoleUI.printError('Error updating $platform app name: $e');
       }
     }
   }
@@ -175,26 +192,36 @@ class WriteAppIdConfigsCommand extends Command {
 
     var value = argResults?['value'];
     if (value == null) {
-      stdout.writeln(
-          'Please provide an app id. Example: flutter pub run publish app-id --value "com.myapp"'
-              .makeWarning);
-      return;
+      _ConsoleUI.printWarning('No app ID provided via --value flag');
+      value = _ConsoleUI.prompt('Enter new app ID (package name)', required: true);
+      if (value == null || value.isEmpty) {
+        _ConsoleUI.printError('App ID cannot be empty');
+        return;
+      }
     }
+
     if (!_Validator.isValidAppId(value)) {
-      stdout.writeln('Invalid app id: $value'.withColor(red));
+      _ConsoleUI.printError(
+        'Invalid app ID: $value\n  Format: com.company.appname (lowercase, dots separated)',
+      );
       return;
     }
 
     var platforms = (argResults?['platforms'] ?? "android,ios").split(',');
+    
+    _ConsoleUI.printHeader('📦 Updating App ID', subtitle: value);
+
     for (var platform in platforms) {
+      platform = platform.trim();
       try {
         var done = ConfigsHelper.updateId(value, platform);
         if (done) {
-          stdout.writeln(
-              'Successfully set $platform app id to: $value'.makeCheck);
+          _ConsoleUI.printSuccess('Updated $platform app ID to: $value');
+        } else {
+          _ConsoleUI.printWarning('Skipped $platform (not configured)');
         }
       } catch (e) {
-        stdout.writeln('Failed to set $platform app id to: $value'.makeError);
+        _ConsoleUI.printError('Error updating $platform app ID: $e');
       }
     }
   }
@@ -239,6 +266,8 @@ class AndroidSignCommand extends Command {
               .makeError);
       return;
     }
+
+    _ConsoleUI.printHeader('🔐 Android App Signing Setup', subtitle: 'Generate keystore and configure signing');
 
     _UpdateHelper.checkIfUpdateAvailable().then((_) {
       _androidSign(); // Calls your existing signing logic

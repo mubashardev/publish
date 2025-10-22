@@ -32,7 +32,10 @@ class _Validator {
     }
   }
 
-  static bool get isGradleExists => File("./android/build.gradle").existsSync();
+  static bool get isGradleExists {
+    return File("./android/app/build.gradle").existsSync() ||
+        File("./android/app/build.gradle.kts").existsSync();
+  }
 
   static bool get isGradleValid {
     if (!isGradleExists) return false;

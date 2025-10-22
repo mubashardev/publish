@@ -3,11 +3,16 @@ part of '../publish.dart';
 class _Commons {
   // static final String basePath = "./lib";
   // static final String pubspecPath = './pubspec.yaml';
-  static final String appBuildPath = "./android/app/build.gradle";
   static final String appManifestPath =
       "./android/app/src/main/AndroidManifest.xml";
   static final String iosPlistPath = './ios/Runner/Info.plist';
   static final String iosPbxprojPath = './ios/Runner.xcodeproj/project.pbxproj';
+
+  /// Gets the app build file path (build.gradle or build.gradle.kts)
+  /// Prefers build.gradle.kts if it exists, otherwise falls back to build.gradle
+  static String get appBuildPath {
+    return _GradleParser.findAppBuildFile();
+  }
 
   // static bool fileContainsString(String path, String pattern) {
   //   String file = getFileAsString(path);
@@ -46,6 +51,8 @@ class _Commons {
   }
 
   /// Reads a file at [path] as a list of lines
+  /// This method is kept for potential future use despite current analysis warnings
+  // ignore: unused_element
   static List<String> getFileAsLines(String path) {
     return File(path).readAsLinesSync();
   }
