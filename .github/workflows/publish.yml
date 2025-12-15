@@ -160,8 +160,7 @@ jobs:
           
           # Only commit if there are changes
           if ! git diff-index --quiet HEAD; then
-            git commit -m "chore: bump version to ${{ env.NEW_VERSION }}" # env context is evaluated at start of step. This won't work within same step!
-            # Fix: Read from grep since env update applies to subsequent steps
+            # Read the new version directly from the file we just updated
             CURRENT_VERSION=$(awk '/^version:/ {print $2}' pubspec.yaml)
             git commit -m "chore: bump version to $CURRENT_VERSION"
             git tag "v$CURRENT_VERSION"
