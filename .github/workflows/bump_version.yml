@@ -73,6 +73,7 @@ jobs:
 
             // Fallback: Local Logic
             _generateLocally(lines);
+            exit(0);
           }
 
           Future<void> _generateWithAI(String apiKey, String commitLog) async {
@@ -102,7 +103,7 @@ jobs:
               ''';
 
               final body = jsonEncode({
-                "model": "google/gemini-flash-1.5",
+                "model": "google/gemini-1.5-flash",
                 "messages": [
                   {"role": "user", "content": prompt}
                 ]
