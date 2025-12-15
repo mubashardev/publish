@@ -5,7 +5,7 @@ homepage: https://mubashar.dev
 repository: https://github.com/mubashardev/publish.git
 
 environment:
-  sdk: ^3.10.1
+  sdk: ^3.0.1
   flutter: ">=1.17.0"
 
 dependencies:
