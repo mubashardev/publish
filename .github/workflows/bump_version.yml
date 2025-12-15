@@ -78,46 +78,50 @@ jobs:
           Future<void> _generateWithAI(String apiKey, String commitLog) async {
             final url = Uri.parse('https://openrouter.ai/api/v1/chat/completions');
             final client = HttpClient();
-            final request = await client.postUrl(url);
-            
-            request.headers.set('Authorization', 'Bearer \$apiKey');
-            request.headers.set('Content-Type', 'application/json');
-            request.headers.set('HTTP-Referer', 'https://github.com/mubashardev/publish'); 
-            request.headers.set('X-Title', 'Publish Workflow');
+            try {
+              final request = await client.postUrl(url);
+              
+              request.headers.set('Authorization', 'Bearer \$apiKey');
+              request.headers.set('Content-Type', 'application/json');
+              request.headers.set('HTTP-Referer', 'https://github.com/mubashardev/publish'); 
+              request.headers.set('X-Title', 'Publish Workflow');
 
-            final prompt = '''
-            You are a technical writer for a Flutter package. 
-            Summarize the following commit messages into a high-quality, readable changelog.
-            
-            Rules:
-            1. Group changes into "Features", "Bug Fixes", "Breaking Changes", and "Improvements".
-            2. Ignore "chore", "release", or noise commits.
-            3. Use bullet points.
-            4. Be concise but descriptive. 
-            5. Output ONLY the markdown content, no introductory text.
+              final prompt = '''
+              You are a technical writer for a Flutter package. 
+              Summarize the following commit messages into a high-quality, readable changelog.
+              
+              Rules:
+              1. Group changes into "Features", "Bug Fixes", "Breaking Changes", and "Improvements".
+              2. Ignore "chore", "release", or noise commits.
+              3. Use bullet points.
+              4. Be concise but descriptive. 
+              5. Output ONLY the markdown content, no introductory text.
 
-            Commits:
-            \$commitLog
-            ''';
+              Commits:
+              \$commitLog
+              ''';
 
-            final body = jsonEncode({
-              "model": "google/gemini-2.0-flash-exp:free",
-              "messages": [
-                {"role": "user", "content": prompt}
-              ]
-            });
+              final body = jsonEncode({
+                "model": "google/gemini-flash-1.5",
+                "messages": [
+                  {"role": "user", "content": prompt}
+                ]
+              });
 
-            request.write(body);
-            final response = await request.close();
-            
-            if (response.statusCode == 200) {
-              final responseBody = await response.transform(utf8.decoder).join();
-              final json = jsonDecode(responseBody);
-              final content = json['choices'][0]['message']['content'];
-              File('release_notes.txt').writeAsStringSync(content);
-              print('✅ AI Release notes generated successfully!');
-            } else {
-              throw Exception('API returned status \${response.statusCode}');
+              request.write(body);
+              final response = await request.close();
+              
+              if (response.statusCode == 200) {
+                final responseBody = await response.transform(utf8.decoder).join();
+                final json = jsonDecode(responseBody);
+                final content = json['choices'][0]['message']['content'];
+                File('release_notes.txt').writeAsStringSync(content);
+                print('✅ AI Release notes generated successfully!');
+              } else {
+                throw Exception('API returned status \${response.statusCode}');
+              }
+            } finally {
+              client.close();
             }
           }
 
@@ -217,9 +221,10 @@ jobs:
 
             // 2. Fetch latest version from pub.dev
             String? publishedVersionStr;
+            final client = HttpClient();
             try {
               final url = Uri.parse('https://pub.dev/api/packages/\$name');
-              final request = await HttpClient().getUrl(url);
+              final request = await client.getUrl(url);
               final response = await request.close();
               if (response.statusCode == 200) {
                 final body = await response.transform(utf8.decoder).join();
@@ -231,6 +236,8 @@ jobs:
               }
             } catch (e) {
               print('Error checking pub.dev: \$e');
+            } finally {
+              client.close();
             }
 
             // 3. Determine Next Version
