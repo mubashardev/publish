@@ -1,4 +1,4 @@
-name: CD - Publish Package
+name: CD - Auto Bump Version
 
 on:
   push:
@@ -8,10 +8,9 @@ on:
 
 permissions:
   contents: write
-  id-token: write # Required for authentication with pub.dev via OIDC
 
 jobs:
-  deploy:
+  bump:
     runs-on: ubuntu-latest
     if: "endsWith(github.event.head_commit.message, '[release]') || github.event_name == 'workflow_dispatch'"
     steps:
@@ -19,6 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -35,17 +35,151 @@ jobs:
         run: flutter pub get
 
       - name: Generate Release Notes
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
+          cat <<EOF > generate_notes.dart
+          import 'dart:io';
+          import 'dart:convert';
+
+          void main(List<String> args) async {
+            final start = args[0];
+            final end = args[1];
+            final apiKey = Platform.environment['OPENROUTER_API_KEY'];
+            
+            // Get commits between range
+            final result = await Process.run('git', ['log', '--pretty=format:%s', '\$start..\$end']);
+            final commitLog = result.stdout as String;
+            final lines = commitLog.split('\n').where((l) => l.trim().isNotEmpty).toList();
+
+            if (lines.isEmpty) {
+               File('release_notes.txt').writeAsStringSync("No significant changes.");
+               return;
+            }
+
+            // Try AI generation if Key is present
+            if (apiKey != null && apiKey.isNotEmpty) {
+              try {
+                print('✨ specific API Key found! Asking AI to summarize...');
+                await _generateWithAI(apiKey, commitLog);
+                return;
+              } catch (e) {
+                print('❌ AI generation failed: \$e');
+                print('Falling back to local summarizer...');
+              }
+            } else {
+              print('ℹ️ No OPENROUTER_API_KEY found. Using local summarizer.');
+            }
+
+            // Fallback: Local Logic
+            _generateLocally(lines);
+          }
+
+          Future<void> _generateWithAI(String apiKey, String commitLog) async {
+            final url = Uri.parse('https://openrouter.ai/api/v1/chat/completions');
+            final client = HttpClient();
+            final request = await client.postUrl(url);
+            
+            request.headers.set('Authorization', 'Bearer \$apiKey');
+            request.headers.set('Content-Type', 'application/json');
+            request.headers.set('HTTP-Referer', 'https://github.com/mubashardev/publish'); 
+            request.headers.set('X-Title', 'Publish Workflow');
+
+            final prompt = '''
+            You are a technical writer for a Flutter package. 
+            Summarize the following commit messages into a high-quality, readable changelog.
+            
+            Rules:
+            1. Group changes into "Features", "Bug Fixes", "Breaking Changes", and "Improvements".
+            2. Ignore "chore", "release", or noise commits.
+            3. Use bullet points.
+            4. Be concise but descriptive. 
+            5. Output ONLY the markdown content, no introductory text.
+
+            Commits:
+            \$commitLog
+            ''';
+
+            final body = jsonEncode({
+              "model": "google/gemini-2.0-flash-exp:free",
+              "messages": [
+                {"role": "user", "content": prompt}
+              ]
+            });
+
+            request.write(body);
+            final response = await request.close();
+            
+            if (response.statusCode == 200) {
+              final responseBody = await response.transform(utf8.decoder).join();
+              final json = jsonDecode(responseBody);
+              final content = json['choices'][0]['message']['content'];
+              File('release_notes.txt').writeAsStringSync(content);
+              print('✅ AI Release notes generated successfully!');
+            } else {
+              throw Exception('API returned status \${response.statusCode}');
+            }
+          }
+
+          void _generateLocally(List<String> lines) {
+            final features = <String>[];
+            final fixes = <String>[];
+            final other = <String>[];
+            
+            for (var line in lines) {
+              var cleanLine = line.trim();
+              final lower = cleanLine.toLowerCase();
+              
+              if (lower.startsWith('chore: bump version')) continue; 
+              if (lower.contains('[release]')) continue;
+
+              cleanLine = cleanLine.replaceAll(RegExp(r'^(feat|fix|chore|docs|style|refactor|perf|test)\s*:\s*', caseSensitive: false), '');
+              if (cleanLine.isNotEmpty) {
+                 cleanLine = cleanLine[0].toUpperCase() + cleanLine.substring(1);
+              }
+              
+              if (lower.startsWith('feat') || lower.startsWith('add') || lower.startsWith('new')) {
+                features.add(cleanLine);
+              } else if (lower.startsWith('fix') || lower.startsWith('bug') || lower.startsWith('resolve')) {
+                fixes.add(cleanLine);
+              } else {
+                other.add(cleanLine);
+              }
+            }
+            
+            final buffer = StringBuffer();
+            if (features.isNotEmpty) {
+              buffer.writeln('### ✨ Features');
+              for (var l in features) buffer.writeln('- \$l');
+              buffer.writeln();
+            }
+            if (fixes.isNotEmpty) {
+              buffer.writeln('### 🐛 Bug Fixes');
+              for (var l in fixes) buffer.writeln('- \$l');
+              buffer.writeln();
+            }
+            if (other.isNotEmpty) {
+              buffer.writeln('### 🔧 Improvements');
+              for (var l in other) buffer.writeln('- \$l');
+            }
+            if (buffer.isEmpty) buffer.writeln('No user-facing changes.');
+            
+            File('release_notes.txt').writeAsStringSync(buffer.toString());
+          }
+          EOF
+
           # Find the previous commit that had [release] in the message
+          # Since HEAD also has [release], skip=1 finds the PREVIOUS one.
           LAST_RELEASE_SHA=$(git log --format="%H" --grep="\[release\]" --skip=1 -n 1)
 
           if [ -z "$LAST_RELEASE_SHA" ]; then
-            echo "No previous release found, generating log from start."
-            git log --pretty=format:"- %s" > release_notes.txt
-          else
-            echo "Generating log from $LAST_RELEASE_SHA to HEAD"
-            git log --pretty=format:"- %s" $LAST_RELEASE_SHA..HEAD > release_notes.txt
+            echo "No previous release found. Using first commit."
+            # Fallback to the very first commit if no previous release tag found
+            LAST_RELEASE_SHA=$(git rev-list --max-parents=0 HEAD)
           fi
+          
+          echo "Generating notes from $LAST_RELEASE_SHA to HEAD"
+          dart run generate_notes.dart $LAST_RELEASE_SHA HEAD
           
           echo "Release Notes Content:"
           cat release_notes.txt
@@ -156,17 +290,34 @@ jobs:
           
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add pubspec.yaml
+
+      - name: Update CHANGELOG
+        run: |
+          # Get current date
+          DATE=$(date +%Y-%m-%d)
           
-          # Only commit if there are changes
+          # Prepare the new entry
+          echo "## [${{ env.NEW_VERSION }}] - $DATE" > new_entry.md
+          cat release_notes.txt >> new_entry.md
+          echo "" >> new_entry.md # Add spacing
+          
+          # Prepend to existing CHANGELOG.md
+          if [ -f "CHANGELOG.md" ]; then
+            cat CHANGELOG.md >> new_entry.md
+          fi
+          mv new_entry.md CHANGELOG.md
+
+      - name: Commit and Push Release
+        run: |
+          git add pubspec.yaml CHANGELOG.md
+          
           if ! git diff-index --quiet HEAD; then
-            # Read the new version directly from the file we just updated
-            CURRENT_VERSION=$(awk '/^version:/ {print $2}' pubspec.yaml)
-            git commit -m "chore: bump version to $CURRENT_VERSION"
-            git tag "v$CURRENT_VERSION"
+            # We use the env var NEW_VERSION here which was set by the bump step
+            git commit -m "chore: bump version to ${{ env.NEW_VERSION }}"
+            git tag "v${{ env.NEW_VERSION }}"
             git push origin main --follow-tags
           else
-             echo "No version change needed."
+             echo "No changes to commit."
           fi
 
       - name: Create Release
@@ -175,9 +326,3 @@ jobs:
           tag_name: v${{ env.NEW_VERSION }}
           name: v${{ env.NEW_VERSION }}
           body_path: release_notes.txt
-
-      - name: Setup Dart for OIDC
-        uses: dart-lang/setup-dart@v1
-
-      - name: Publish to pub.dev
-        run: dart pub publish --force
