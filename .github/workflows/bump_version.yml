@@ -322,8 +322,9 @@ jobs:
           if ! git diff-index --quiet HEAD; then
             # We use the env var NEW_VERSION here which was set by the bump step
             git commit -m "chore: bump version to ${{ env.NEW_VERSION }}"
-            git tag "v${{ env.NEW_VERSION }}"
-            git push origin main --follow-tags
+            git tag -f "v${{ env.NEW_VERSION }}"
+            git push origin main
+            git push -f origin "v${{ env.NEW_VERSION }}"
           else
              echo "No changes to commit."
           fi
