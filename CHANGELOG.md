@@ -1,3 +1,13 @@
+## [1.1.7] - 2025-12-16
+### ✨ Features
+- Add `init` command for interactive project setup, refactor `icons` command to expose static generation, and implement iOS splash screen updates.
+- Introduce new commands for versioning, project health, icon and splash screen generation, changelog management, and gitignore.
+
+### 🔧 Improvements
+- Update README with new `publish` commands and improved section organization.
+- Fixed argument definition from `required` to `mandatory` and remove unused variable and comment.
+- Remove duplicate changelog entries for version 1.1.6
+
 ## [1.1.6] - 2025-12-16
 No user-facing changes.
 
