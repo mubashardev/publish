@@ -23,8 +23,58 @@
 
 ## Commands:
 
+### 🚀 Release Workflow
 
-### Android Signing Configuration
+#### Version Bumping:
+Increment your package version in `pubspec.yaml` automatically.
+```bash
+publish version major  # 1.0.0 -> 2.0.0
+publish version minor  # 1.0.0 -> 1.1.0
+publish version patch  # 1.0.0 -> 1.0.1
+publish version build  # 1.0.0 -> 1.0.0+1
+```
+
+#### Changelog Management:
+Add a new entry to your `CHANGELOG.md` for the current version.
+```bash
+publish changelog
+```
+
+---
+
+### 🩺 Project Health
+
+#### Project Doctor:
+Validate your project configuration (Pubspec, Android Manifest, Gradle, iOS Info.plist, Signing Keys) before building.
+```bash
+publish doctor
+```
+
+#### Gitignore Generator:
+Create a standard Flutter `.gitignore` file.
+```bash
+publish ignore
+```
+
+---
+
+### 🎨 Asset Management
+
+#### App Icons:
+Generate all Android and iOS icon sizes from a single source image (1024x1024 recommended).
+```bash
+publish icons --file assets/logo.png
+```
+
+#### Splash Screen:
+Update the Android launch background color.
+```bash
+publish splash --color "#1E1E1E"
+```
+
+---
+
+### 📱 Android Signing Configuration
 
 #### Generate Signing Key and Configure Files:
 Use this command in your project terminal to automatically generate a signing key and set up your Android project for release:
@@ -39,7 +89,7 @@ This will:
 
 ---
 
-### Generate App Bundle:
+### 📦 Generate App Bundle:
 
 To create a signed app bundle, run:
 ```bash
@@ -50,7 +100,7 @@ The signed app bundle will be generated in the `build/app/outputs/bundle/release
 
 ---
 
-### App Configuration
+### ⚙️ App Configuration
 
 #### Check App Current Configuration:
 ```bash
