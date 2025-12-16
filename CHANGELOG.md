@@ -1,5 +1,4 @@
-## [1.1.10] - 2025-12-16
-No user-facing changes.
+
 
 ## [1.1.9] - 2025-12-16
 No user-facing changes.

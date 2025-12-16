@@ -283,7 +283,11 @@ jobs:
             await pubspecFile.writeAsString(newLines.join('\n') + '\n');
             
             // Output for GitHub Actions
-            File(Platform.environment['GITHUB_ENV']!).writeAsStringSync('NEW_VERSION=\$nextVersion\n', mode: FileMode.append);
+            if (Platform.environment.containsKey('GITHUB_ENV')) {
+              File(Platform.environment['GITHUB_ENV']!).writeAsStringSync('NEW_VERSION=\$nextVersion\n', mode: FileMode.append);
+            } else {
+              print('Warning: GITHUB_ENV not found. Running locally? Set NEW_VERSION=\$nextVersion manually.');
+            }
           }
 
           List<int> _parseVersion(String v) {
