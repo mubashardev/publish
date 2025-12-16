@@ -1,6 +1,6 @@
 name: publish
 description: "The ultimate Flutter CLI tool. Automate app configuration, asset generation (icons/splash), and release workflows (versioning/signing) with ease."
-version: 1.1.9
+version: 1.1.10
 homepage: https://mubashar.dev
 repository: https://github.com/mubashardev/publish.git
 
