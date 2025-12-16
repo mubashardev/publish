@@ -265,7 +265,7 @@ jobs:
                     maj++;
                   }
                 }
-                nextVersion = '$maj.$min.$pat';
+                nextVersion = '\$maj.\$min.\$pat';
                 print('Published version >= Local version. Bumping to \$nextVersion');
               } else {
                 print('Local version is already ahead. Using \$nextVersion');
