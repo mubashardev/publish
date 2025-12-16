@@ -13,7 +13,7 @@ class SplashCommand extends Command {
       'color',
       abbr: 'c',
       help: 'Background color (hex, e.g. #FF0000).',
-      required: true,
+      mandatory: true,
     );
   }
 
@@ -50,14 +50,12 @@ class SplashCommand extends Command {
     }
 
     try {
-      String content = file.readAsStringSync();
       // XML parsing/replacing using Regex for simplicity in preserving comments/structure
       // Looking for <item android:drawable="@color/..." /> or <item android:drawable="#..." /> inside <layer-list>
       // Actually default flutter uses <item><color android:color="#FFFFFF"/></item> or similar?
       // Default content:
       // <?xml version="1.0" encoding="utf-8"?>
       // <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-      //     <item android:drawable="?android:colorBackground" />
       // </layer-list>
 
       // Note: To be safe, we should guide user to set a color item.
