@@ -1,15 +1,6 @@
 ## [1.1.6] - 2025-12-16
 No user-facing changes.
 
-## [1.1.6] - 2025-12-16
-No user-facing changes.
-
-## [1.1.6] - 2025-12-16
-No user-facing changes.
-
-## [1.1.6] - 2025-12-16
-No user-facing changes.
-
 ## [1.1.5]
  - Added support for multiple build.gradle file formats (Groovy and Kotlin DSL).
  - Enhanced gradle parser to handle various applicationId syntax patterns.
