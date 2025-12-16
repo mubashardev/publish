@@ -1,10 +1,10 @@
 library publish;
 
 import 'dart:io';
-import 'dart:convert';
 
-import 'package:args/command_runner.dart';
+import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:args/command_runner.dart';
 import 'package:image/image.dart' as img;
 import 'package:xml/xml.dart';
 import 'package:yaml/yaml.dart';
@@ -15,7 +15,7 @@ import 'src/extensions.dart';
 part 'src/android_signing.dart';
 part 'src/commons.dart';
 part 'src/console_ui.dart';
-part 'src/gradle_parser.dart'; // Was missing in my previous overwrite? Yes.
+part 'src/gradle_parser.dart';
 part 'src/pubspec_api.dart';
 part 'src/update_helper.dart';
 part 'src/validator.dart';

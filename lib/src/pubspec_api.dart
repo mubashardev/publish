@@ -9,12 +9,13 @@ class _PubspecAPI {
   ///
   /// Returns `null` if the package doesn't exist or the request fails.
   static Future<String?> getLatestVersion(String package) async {
-    http.Response res = await http.get(Uri.parse(baseUrl + package));
-    if (res.statusCode == 200) {
-      Map<String, dynamic> resJson = json.decode(res.body);
-      return resJson['latest']['version'];
-    } else {
-      return null;
-    }
+    try {
+      final res = await http.get(Uri.parse(baseUrl + package));
+      if (res.statusCode == 200) {
+        final resJson = json.decode(res.body);
+        return resJson['latest']['version'] as String;
+      }
+    } catch (_) {}
+    return null;
   }
 }

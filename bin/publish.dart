@@ -20,6 +20,8 @@ void main(List<String> arguments) async {
     ..addCommand(SplashCommand())
     ..addCommand(InitCommand());
 
+  await UpdateHelper.checkIfUpdateAvailable();
+
   try {
     await runner.run(arguments);
   } on UsageException catch (e) {
