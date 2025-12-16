@@ -92,10 +92,12 @@ class IconsCommand extends Command {
 
     for (var size in sizes) {
       for (var scale in scales) {
-        if (size == 1024 && scale != 1)
+        if (size == 1024 && scale != 1) {
           continue; // Marketing icon is 1024x1024 (1x)
-        if (size == 83.5 && scale != 2)
+        }
+        if (size == 83.5 && scale != 2) {
           continue; // iPad Pro 12.9 is 167px (83.5 * 2)
+        }
 
         final px = (size * scale).round();
         final filename = 'Icon-App-${size}x$size@${scale}x.png';
