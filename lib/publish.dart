@@ -7,6 +7,7 @@ import 'package:publish/src/extensions.dart';
 import 'package:xml/xml.dart';
 import 'package:yaml/yaml.dart';
 import 'package:http/http.dart' as http;
+import 'package:image/image.dart' as img;
 
 import 'src/constants.dart';
 
@@ -20,6 +21,13 @@ part 'src/validator.dart';
 part 'configs/android_configs.dart';
 part 'configs/ios_configs.dart';
 part 'configs/configs_helper.dart';
+
+part 'src/commands/ignore_command.dart';
+part 'src/commands/version_command.dart';
+part 'src/commands/doctor_command.dart';
+part 'src/commands/changelog_command.dart';
+part 'src/commands/icons_command.dart';
+part 'src/commands/splash_command.dart';
 
 class ReadAppConfigsCommand extends Command {
   @override

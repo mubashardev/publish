@@ -11,7 +11,13 @@ void main(List<String> arguments) async {
     ..addCommand(AndroidSignCommand())
     ..addCommand(ReadAppConfigsCommand())
     ..addCommand(WriteAppConfigsCommand())
-    ..addCommand(UpdateCommand());
+    ..addCommand(UpdateCommand())
+    ..addCommand(VersionCommand())
+    ..addCommand(ChangelogCommand())
+    ..addCommand(DoctorCommand())
+    ..addCommand(IgnoreCommand())
+    ..addCommand(IconsCommand())
+    ..addCommand(SplashCommand());
 
   try {
     await runner.run(arguments);
