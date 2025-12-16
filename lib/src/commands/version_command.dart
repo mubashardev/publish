@@ -13,6 +13,64 @@ class VersionCommand extends Command {
     addSubcommand(_BumpCommand('patch'));
     addSubcommand(_BumpCommand('build'));
   }
+
+  static String getNextVersion(String currentVersion, String type) {
+    final versionRegex = RegExp(r'^(\d+)\.(\d+)\.(\d+)(\+(\d+))?');
+    final match = versionRegex.firstMatch(currentVersion);
+
+    if (match == null) {
+      throw FormatException('Invalid version format: $currentVersion');
+    }
+
+    int major = int.parse(match.group(1)!);
+    int minor = int.parse(match.group(2)!);
+    int patch = int.parse(match.group(3)!);
+    int? build = match.group(5) != null ? int.parse(match.group(5)!) : null;
+
+    switch (type) {
+      case 'major':
+        major++;
+        minor = 0;
+        patch = 0;
+        build = null;
+        break;
+      case 'minor':
+        if (minor < 9) {
+          minor++;
+        } else {
+          minor = 0;
+          major++;
+        }
+        patch = 0;
+        build = null;
+        break;
+      case 'patch':
+        if (patch < 9) {
+          patch++;
+        } else {
+          patch = 0;
+          if (minor < 9) {
+            minor++;
+          } else {
+            minor = 0;
+            major++;
+          }
+        }
+        build = null;
+        break;
+      case 'build':
+        build = (build ?? 0) + 1;
+        break;
+      default:
+        throw ArgumentError('Invalid bump type: $type');
+    }
+
+    String newVersion = '$major.$minor.$patch';
+    if (build != null) {
+      newVersion += '+$build';
+    }
+    return newVersion;
+  }
 }
 
 class _BumpCommand extends Command {
@@ -47,45 +105,28 @@ class _BumpCommand extends Command {
       return;
     }
 
-    int major = int.parse(match.group(1)!);
-    int minor = int.parse(match.group(2)!);
-    int patch = int.parse(match.group(3)!);
-    int? build = match.group(5) != null ? int.parse(match.group(5)!) : null;
+    final oldVersion = match.group(0)!.substring(8).trim();
+    // Reconstruct version string from loading to pass to logic if needed,
+    // or just pass components.
+    // passing the whole version string is easier if we have a parser,
+    // but here we already parsed it.
+    // Let's make getNextVersion take the string and return the string, reliable and cleaner.
+    final matchVersion = match.group(1)! +
+        '.' +
+        match.group(2)! +
+        '.' +
+        match.group(3)! +
+        (match.group(5) != null ? '+${match.group(5)}' : '');
 
-    final oldVersion = '${match.group(0)!.substring(8).trim()}';
+    try {
+      final newVersion = VersionCommand.getNextVersion(matchVersion, _type);
+      final newContent =
+          content.replaceFirst(versionRegex, 'version: $newVersion');
+      pubspecFile.writeAsStringSync(newContent);
 
-    // Bump logic
-    switch (_type) {
-      case 'major':
-        major++;
-        minor = 0;
-        patch = 0;
-        build =
-            null; // Reset build on major bump? Usually yes or keep it. Let's reset to clean slate or absent.
-        break;
-      case 'minor':
-        minor++;
-        patch = 0;
-        build = null;
-        break;
-      case 'patch':
-        patch++;
-        build = null;
-        break;
-      case 'build':
-        build = (build ?? 0) + 1;
-        break;
+      _ConsoleUI.printSuccess('Bumped version from $oldVersion to $newVersion');
+    } catch (e) {
+      _ConsoleUI.printError(e.toString());
     }
-
-    String newVersion = '$major.$minor.$patch';
-    if (build != null) {
-      newVersion += '+$build';
-    }
-
-    final newContent =
-        content.replaceFirst(versionRegex, 'version: $newVersion');
-    pubspecFile.writeAsStringSync(newContent);
-
-    _ConsoleUI.printSuccess('Bumped version from $oldVersion to $newVersion');
   }
 }

@@ -249,8 +249,23 @@ jobs:
 
               if (_isGreater(published, local) || _isEqual(published, local)) {
                 // If published is >= local, we must bump published to get next
-                // Defaulting to patch bump
-                nextVersion = '\${published[0]}.\${published[1]}.\${published[2] + 1}';
+                // Defaulting to patch bump with 9->0 rollover
+                int maj = published[0];
+                int min = published[1];
+                int pat = published[2];
+
+                if (pat < 9) {
+                  pat++;
+                } else {
+                  pat = 0;
+                  if (min < 9) {
+                    min++;
+                  } else {
+                    min = 0;
+                    maj++;
+                  }
+                }
+                nextVersion = '$maj.$min.$pat';
                 print('Published version >= Local version. Bumping to \$nextVersion');
               } else {
                 print('Local version is already ahead. Using \$nextVersion');
