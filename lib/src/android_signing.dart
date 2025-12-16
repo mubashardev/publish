@@ -1,172 +1,136 @@
 part of '../publish.dart';
 
-/// Alias for the key entry in the keystore
-String? alias;
+/// Helper to handle Android signing configuration
+class _AndroidSigning {
+  static String? alias;
+  static String keystorePath = "keys/keystore.jks";
+  static String? keyPass;
+  static String? keystorePass;
+  static const String keyPropertiesPath = "./android/key.properties";
 
-/// Path to the keystore file
-String keystorePath = "keys/keystore.jks";
+  static Future<bool> sign() async {
+    _ConsoleUI.printHeader('🔐 Android Signing Setup',
+        subtitle: 'Keystore Generator');
 
-/// Password for the key entry in the keystore
-String? keyPass;
-
-/// Password for the keystore file
-String? keystorePass;
-
-/// Path to the properties file used for signing configuration
-const String keyPropertiesPath = "./android/key.properties";
-
-/// Main function that uses other helper functions to setup android signing
-void _androidSign() async {
-  stdout.writeln('--------------------------------------------');
-  var appId = _AndroidConfigs.appId;
-  await _askToChangeId(appId);
-  _generateKeystore();
-  _createKeyProperties();
-  _configureBuildConfig();
-}
-
-Future<void> _askToChangeId(String oldId) async {
-  stdout.writeln("Current package name: $oldId");
-  stdout.write("Do you want to change the package name? [y/n] ");
-  var input = stdin.readLineSync();
-  if (input == "y" || input == "Y") {
-    stdout.write("Enter new package name: ");
-    var appId = stdin.readLineSync();
-    if (appId != null) {
-      _setAppId(appId);
+    var appId = _AndroidConfigs.appId;
+    final newId = await _askToChangeId(appId);
+    if (newId != null) {
+      _setAppId(newId);
     }
-  }
-}
 
-/// Generates the keystore with the given settings
-void _generateKeystore() {
-  stdout.write("Enter key alias: ");
-  alias = stdin.readLineSync();
+    if (!_generateKeystore()) return false;
+    _createKeyProperties();
+    _configureBuildConfig();
 
-  stdout.write("Publisher's Common Name (i.e. Mubashar Dev): ");
-  String cn = (stdin.readLineSync() ?? "").trim();
-  cn = cn.isEmpty ? 'Mubashar Dev' : cn;
-
-  stdout.write("Organizational Unit (i.e. MH): ");
-  String ou = (stdin.readLineSync() ?? "").trim();
-  ou = ou.isEmpty ? 'MH' : ou;
-
-  stdout.write("Organization (i.e. MicroProgramers): ");
-  String org = (stdin.readLineSync() ?? "").trim();
-  org = org.isEmpty ? 'MicroProgramers' : org;
-
-  stdout.write("Locality (i.e. Layyah): ");
-  String locality = (stdin.readLineSync() ?? "").trim();
-  locality = locality.isEmpty ? 'Layyah' : locality;
-
-  stdout.write("State (i.e. Punjab): ");
-  String state = (stdin.readLineSync() ?? "").trim();
-  state = state.isEmpty ? 'Punjab' : state;
-
-  stdout.write("Country ISO (i.e. PK for Pakistan): ");
-  String country = (stdin.readLineSync() ?? "").trim();
-  country = country.isEmpty ? 'PK' : country;
-
-  stdout.write("Validity Years (i.e. 100): ");
-  var validity = int.tryParse(stdin.readLineSync() ?? "");
-  int days = validity != null
-      ? (validity * 365)
-      : (DateTime(9999).difference(DateTime.now()).inDays);
-
-  String dname = "CN=$cn, OU=$ou, O=$org, L=$locality, S=$state, C=$country";
-
-  stdout.write("key password: ");
-  keyPass = stdin.readLineSync();
-  stdout.write("keystore password: ");
-  keystorePass = stdin.readLineSync();
-  if (alias == null ||
-      alias!.isEmpty ||
-      dname.isEmpty ||
-      keyPass == null ||
-      keyPass!.isEmpty ||
-      keystorePass == null ||
-      keystorePass!.isEmpty) {
-    stderr.writeln(
-        "All inputs that don't have default mentioned are required".makeError);
-    return;
+    return true;
   }
 
-  Directory keys = Directory("keys");
-  if (!keys.existsSync()) {
-    keys.createSync();
+  static Future<String?> _askToChangeId(String oldId) async {
+    _ConsoleUI.printStatus('Config', 'Current package name: $oldId');
+    if (_ConsoleUI.promptConfirm("Do you want to change the package name?")) {
+      return _ConsoleUI.prompt("Enter new package name", required: true);
+    }
+    return null;
   }
 
-  ProcessResult res = Process.runSync("keytool", [
-    "-genkey",
-    "-noprompt",
-    "-alias",
-    alias!,
-    "-dname",
-    dname,
-    "-keystore",
-    keystorePath,
-    "-storepass",
-    keystorePass!,
-    "-keypass",
-    keyPass!,
-    "-keyalg",
-    "RSA",
-    "-keysize",
-    "2048",
-    "-validity",
-    "$days"
-  ]);
-  stdout.write(res.stdout.toString().withColor(yellow));
-  stderr.write(res.stderr.toString().withColor(yellow));
-  stdout.writeln("Generated keystore with provided inputs".makeCheck);
-  stdout.writeln(
-      "Now you can build the app by running 'flutter build appbundle'"
-          .makeCheck);
-}
+  static bool _generateKeystore() {
+    alias = _ConsoleUI.prompt("Enter key alias");
+    final cn =
+        _ConsoleUI.prompt("Publisher's Common Name (e.g. Mubashar Dev)") ??
+            'Mubashar Dev';
+    final ou = _ConsoleUI.prompt("Organizational Unit (e.g. MH)") ?? 'MH';
+    final org = _ConsoleUI.prompt("Organization (e.g. MicroProgramers)") ??
+        'MicroProgramers';
+    final locality = _ConsoleUI.prompt("Locality (e.g. Layyah)") ?? 'Layyah';
+    final state = _ConsoleUI.prompt("State (e.g. Punjab)") ?? 'Punjab';
+    final country = _ConsoleUI.prompt("Country ISO (e.g. PK)") ?? 'PK';
 
-/// Creates key.properties file required by signing config in build.gradle file
-void _createKeyProperties() {
-  _Commons.writeStringToFile(keyPropertiesPath, """storePassword=$keystorePass
+    final validityInput = _ConsoleUI.prompt("Validity Years (e.g. 100)");
+    final validity = int.tryParse(validityInput ?? "");
+    final days = validity != null
+        ? (validity * 365)
+        : (DateTime(9999).difference(DateTime.now()).inDays);
+
+    final dname = "CN=$cn, OU=$ou, O=$org, L=$locality, S=$state, C=$country";
+
+    keyPass = _ConsoleUI.prompt("Key password", required: true);
+    keystorePass = _ConsoleUI.prompt("Keystore password", required: true);
+
+    if (alias == null ||
+        alias!.isEmpty ||
+        keyPass == null ||
+        keystorePass == null) {
+      _ConsoleUI.printError("Key Alias and Passwords are required.");
+      return false;
+    }
+
+    final keysDir = Directory("keys");
+    if (!keysDir.existsSync()) keysDir.createSync();
+
+    final res = Process.runSync("keytool", [
+      "-genkey",
+      "-noprompt",
+      "-alias",
+      alias!,
+      "-dname",
+      dname,
+      "-keystore",
+      keystorePath,
+      "-storepass",
+      keystorePass!,
+      "-keypass",
+      keyPass!,
+      "-keyalg",
+      "RSA",
+      "-keysize",
+      "2048",
+      "-validity",
+      "$days"
+    ]);
+
+    if (res.exitCode != 0) {
+      _ConsoleUI.printError("Keytool failed: ${res.stderr}");
+      return false;
+    }
+
+    _ConsoleUI.printSuccess("Generated keystore at $keystorePath");
+    return true;
+  }
+
+  static void _createKeyProperties() {
+    _Commons.writeStringToFile(keyPropertiesPath, """storePassword=$keystorePass
 keyPassword=$keyPass
 keyAlias=$alias
 storeFile=../../$keystorePath
 """);
-  stdout.writeln("Key properties file created at $keyPropertiesPath".makeCheck);
-}
-
-/// configures build.gradle/build.gradle.kts with release config with the generated key details
-void _configureBuildConfig() {
-  String bfString = _Commons.getFileAsString(_Commons.appBuildPath);
-  String buildFileType =
-      _GradleParser.detectBuildFileType(_Commons.appBuildPath);
-
-  if (!bfString.contains("def keystoreProperties") &&
-      !bfString.contains("keystoreProperties['keyAlias']") &&
-      !bfString.contains('val keystoreProperties') &&
-      !bfString.contains('keystoreProperties["keyAlias"]')) {
-    String updated;
-    if (buildFileType == 'kts') {
-      // Kotlin DSL format (build.gradle.kts)
-      updated = _configureBuildConfigKts(bfString);
-    } else {
-      // Groovy format (build.gradle)
-      updated = _configureBuildConfigGroovy(bfString);
-    }
-
-    _Commons.writeStringToFile(_Commons.appBuildPath, updated);
-    stdout.writeln("configured release configs");
-  } else {
-    stdout.writeln("release configs already configured");
+    _ConsoleUI.printSuccess("Created $keyPropertiesPath");
   }
-}
 
-/// Configures Groovy build.gradle file
-String _configureBuildConfigGroovy(String content) {
-  List<String> buildfile = content.split('\n');
+  static void _configureBuildConfig() {
+    String bfString = _Commons.getFileAsString(_Commons.appBuildPath);
+    String buildFileType =
+        _GradleParser.detectBuildFileType(_Commons.appBuildPath);
 
-  buildfile = buildfile.map((line) {
-    if (line.contains(RegExp("android.*{"))) {
-      return """
+    if (!bfString.contains("key.properties")) {
+      String updated;
+      if (buildFileType == 'kts') {
+        updated = _configureBuildConfigKts(bfString);
+      } else {
+        updated = _configureBuildConfigGroovy(bfString);
+      }
+      _Commons.writeStringToFile(_Commons.appBuildPath, updated);
+      _ConsoleUI.printSuccess("Configured build.gradle signing configs");
+    } else {
+      _ConsoleUI.printWarning(
+          "Signing configs likely already present in build.gradle");
+    }
+  }
+
+  static String _configureBuildConfigGroovy(String content) {
+    List<String> buildfile = content.split('\n');
+    buildfile = buildfile.map((line) {
+      if (line.contains(RegExp("android.*{"))) {
+        return """
   def keystoreProperties = new Properties()
   def keystorePropertiesFile = rootProject.file('key.properties')
   if (keystorePropertiesFile.exists()) {
@@ -175,8 +139,8 @@ String _configureBuildConfigGroovy(String content) {
 
   android {
               """;
-    } else if (line.contains(RegExp("buildTypes.*{"))) {
-      return """
+      } else if (line.contains(RegExp("buildTypes.*{"))) {
+        return """
     signingConfigs {
         release {
             keyAlias keystoreProperties['keyAlias']
@@ -187,23 +151,20 @@ String _configureBuildConfigGroovy(String content) {
     }
     buildTypes {
               """;
-    } else if (line.contains("signingConfig signingConfigs.debug")) {
-      return "            signingConfig signingConfigs.release";
-    } else {
-      return line;
-    }
-  }).toList();
+      } else if (line.contains("signingConfig signingConfigs.debug")) {
+        return "            signingConfig signingConfigs.release";
+      } else {
+        return line;
+      }
+    }).toList();
+    return buildfile.join("\n");
+  }
 
-  return buildfile.join("\n");
-}
-
-/// Configures Kotlin DSL build.gradle.kts file
-String _configureBuildConfigKts(String content) {
-  List<String> buildfile = content.split('\n');
-
-  buildfile = buildfile.map((line) {
-    if (line.contains(RegExp("android\\s*\\{"))) {
-      return """
+  static String _configureBuildConfigKts(String content) {
+    List<String> buildfile = content.split('\n');
+    buildfile = buildfile.map((line) {
+      if (line.contains(RegExp("android\\s*\\{"))) {
+        return """
   val keystoreProperties = Properties()
   val keystorePropertiesFile = rootProject.file("key.properties")
   if (keystorePropertiesFile.exists()) {
@@ -212,8 +173,8 @@ String _configureBuildConfigKts(String content) {
 
   android {
               """;
-    } else if (line.contains(RegExp("buildTypes\\s*\\{"))) {
-      return """
+      } else if (line.contains(RegExp("buildTypes\\s*\\{"))) {
+        return """
     signingConfigs {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as String?
@@ -224,22 +185,19 @@ String _configureBuildConfigKts(String content) {
     }
     buildTypes {
               """;
-    } else if (line.contains("signingConfig = signingConfigs.debug") ||
-        line.contains("signingConfig signingConfigs.debug")) {
-      return '            signingConfig = signingConfigs.getByName("release")';
-    } else {
-      return line;
-    }
-  }).toList();
+      } else if (line.contains("signingConfig = signingConfigs.debug") ||
+          line.contains("signingConfig signingConfigs.debug")) {
+        return '            signingConfig = signingConfigs.getByName("release")';
+      } else {
+        return line;
+      }
+    }).toList();
+    return buildfile.join("\n");
+  }
 
-  return buildfile.join("\n");
-}
-
-void _setAppId(String appId) {
-  String bfString = _Commons.getFileAsString(_Commons.appBuildPath);
-
-  // Use universal parser to replace applicationId
-  String updated = _GradleParser.replaceApplicationId(bfString, appId);
-
-  _Commons.writeStringToFile(_Commons.appBuildPath, updated);
+  static void _setAppId(String appId) {
+    String bfString = _Commons.getFileAsString(_Commons.appBuildPath);
+    String updated = _GradleParser.replaceApplicationId(bfString, appId);
+    _Commons.writeStringToFile(_Commons.appBuildPath, updated);
+  }
 }

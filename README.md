@@ -1,222 +1,127 @@
+# Publish 🚀
 
-# publish
+[![pub package](https://img.shields.io/pub/v/publish.svg)](https://pub.dev/packages/publish)
+[![license](https://img.shields.io/github/license/mubashardev/publish.svg)](https://github.com/mubashardev/publish/blob/master/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/mubashardev/publish.svg)](https://github.com/mubashardev/publish/stargazers)
 
-**publish** is a Flutter CLI package designed to simplify app configuration, including setting app names, app IDs, and Android signing configurations for Play Store publishing. It removes the hassle of manual setup and allows developers to focus on building great apps.
+**Publish** is the ultimate CLI tool for Flutter developers. It automates the tedious parts of app configuration, release management, and asset generation, letting you focus on writing code. From "Zero to Hero" project setup to seamless Play Store publishing preparation, `publish` has you covered.
 
-## Features:
+## ✨ Features
 
-- Easily configure **App name** and **App ID** for both Android and iOS platforms.
-- Platform-specific configuration options.
-- Automatically generate Android keystores and configure signing files.
-- Simplified command usage for setting up your project and creating signed app bundles.
+- **🧙‍♂️ Interactive Setup**: Wizard-style setup for new projects (`init`).
+- **📦 Release Workflow**: Automate version bumps and changelog updates.
+- **🎨 Asset Management**: Generate icons (`Android/iOS`) and splash screens from a single file.
+- **🩺 Project Doctor**: Diagnose and fix configuration issues (`pubspec`, `gradle`, `manifest`).
+- **🔐 Android Signing**: Auto-generate keystores and modify `build.gradle` safely.
+- **⚙️ App Config**: Update App Name and Package ID across platforms with one command.
 
 ---
 
-## Installation:
+## 🛠️ Installation
 
-1. Run the following command in your CMD or Terminal:
-   ```bash
-   flutter pub global activate publish
-   ```
-   This will activate the superpowers of **publish** package.
----
+Activate the package globally from pub.dev:
 
-## Commands:
-
-### 🚀 Release Workflow
-
-#### Version Bumping:
-Increment your package version in `pubspec.yaml` automatically.
 ```bash
-publish version major  # 1.0.0 -> 2.0.0
-publish version minor  # 1.0.0 -> 1.1.0
-publish version patch  # 1.0.0 -> 1.0.1
-publish version build  # 1.0.0 -> 1.0.0+1
+flutter pub global activate publish
 ```
 
-#### Changelog Management:
-Add a new entry to your `CHANGELOG.md` for the current version.
-```bash
-publish changelog
-```
+You can now use the `publish` command anywhere in your terminal.
 
 ---
 
-### 🧙‍♂️ Interactive Setup
+## 🚀 Quick Start
 
-#### Publish Wizard:
-The easiest way to set up a new project. Guides you through App Name, Package ID, Icons, and Gitignore setup.
+### 1. Initialize a New Project
+Run the interactive wizard to set up your App Name, Package ID, Icons, and Gitignore in seconds:
+
 ```bash
 publish init
 ```
 
----
+### 2. Check Project Health
+Ensure your project is ready for development or release:
 
-### 🩺 Project Health
-
-#### Project Doctor:
-Validate your project configuration (Pubspec, Android Manifest, Gradle, iOS Info.plist, Signing Keys) before building.
 ```bash
 publish doctor
 ```
 
-#### Gitignore Generator:
-Create a standard Flutter `.gitignore` file.
-```bash
-publish ignore
-```
-
 ---
 
-### 🎨 Asset Management
+## 📖 Command Reference
 
-#### App Icons:
-Generate all Android and iOS icon sizes from a single source image (1024x1024 recommended).
+### 🎨 Assets & UI
+
+| Command | Description |
+|---------|-------------|
+| `publish icons` | Generate Android & iOS icons from a source image (default: `assets/icon.png`). |
+| `publish splash` | Update native splash screen background color (Android & iOS). |
+
+**Examples:**
 ```bash
+# Generate icons from specific file
 publish icons --file assets/logo.png
+
+# Update splash screen color
+publish splash --color "#4285F4"
 ```
 
-#### Splash Screen:
-Update the Android launch background color.
+### 📦 Release Automation
+
+| Command | Description |
+|---------|-------------|
+| `publish version` | Bump package version (`major`, `minor`, `patch`, `build`). |
+| `publish changelog` | Add a new entry to `CHANGELOG.md` for the current version. |
+| `publish ignore` | Generate a standard Flutter `.gitignore` file. |
+
+**Examples:**
 ```bash
-publish splash --color "#1E1E1E"
+# Increment patch version (1.0.0 -> 1.0.1)
+publish version patch
+
+# Prepare changelog for release
+publish changelog
 ```
 
----
+### ⚙️ Configuration & Signing
 
-### 📱 Android Signing Configuration
+| Command | Description |
+|---------|-------------|
+| `publish config` | Read or write App Name and Package ID. |
+| `publish sign-android` | Generate keystore and configure `build.gradle` for release. |
 
-#### Generate Signing Key and Configure Files:
-Use this command in your project terminal to automatically generate a signing key and set up your Android project for release:
+**Examples:**
 ```bash
+# Update App Name for all platforms
+publish config app-name --value "My Awesome App"
+
+# Update Package ID (Bundle ID)
+publish config app-id --value "com.example.awesome"
+
+# Setup Android Signing (Keystore + Gradle)
 publish sign-android
 ```
 
-This will:
-- Generate a keystore file.
-- Create the `key.properties` file with your details.
-- Update your `build.gradle` file for release builds.
-
 ---
 
-### 📦 Generate App Bundle:
-
-To create a signed app bundle, run:
-```bash
-flutter build appbundle
-```
-
-The signed app bundle will be generated in the `build/app/outputs/bundle/release` directory.
-
----
-
-### ⚙️ App Configuration
-
-#### Check App Current Configuration:
-```bash
-publish --read-configs
-```
-
-This command will print the current app name and app ID for both Android and iOS platforms.
-
-#### Update App Name:
-To update the app name for both Android & iOS with single command:
-```bash
-publish config app-name --value "Test"
-```
-
-For platform-specific updates:
-```bash
-publish config app-name --value "Test" --platforms=android
-publish config app-name --value "Test" --platforms=ios
-publish config app-name --value "Test" --platforms=android,ios
-```
-
-#### Update App ID:
-To update the app ID for both Android & iOS with single command:
-```bash
-publish config app-id --value "com.test"
-```
-
-For platform-specific updates:
-```bash
-publish config app-id --value "com.test" --platforms=android
-publish config app-id --value "com.test" --platforms=ios
-publish config app-id --value "com.test" --platforms=android,ios
-```
-
----
-
----
-
-<details>
-<summary><b>📚 Advanced: Gradle Format Support (Optional Read)</b></summary>
+## 🤖 Advanced Usage
 
 ### Gradle Format Support
+`publish` intelligently detects and handles both **Groovy** (`build.gradle`) and **Kotlin DSL** (`build.gradle.kts`) formats. Whether you use the legacy or modern Android build system, `publish` will correctly parse and update your `applicationId` and signing configs without breaking your build scripts.
 
-The **publish** package automatically detects and handles multiple **build.gradle** file formats. This section provides detailed information for developers who want to understand the gradle parsing capabilities.
-
-#### Supported Gradle Types
-
-The parser supports both **Groovy** and **Kotlin DSL** formats:
-
-**1. Groovy (build.gradle)**
-- Traditional Android gradle format
-- Uses groovy syntax with flexible property definitions
-- Example: `applicationId "com.example.app"`
-
-**2. Kotlin DSL (build.gradle.kts)**
-- Modern gradle format with type safety
-- More verbose but provides IDE autocomplete support
-- Example: `applicationId = "com.example.app"`
-
-#### Main Differences
-
-| Feature | Groovy | Kotlin DSL |
-|---------|--------|-----------|
-| File Extension | `.gradle` | `.gradle.kts` |
-| Syntax | Dynamic, groovy-based | Statically typed, kotlin-based |
-| IDE Support | Basic | Enhanced (autocomplete, type checking) |
-| Learning Curve | Easier for beginners | Steeper (Kotlin knowledge required) |
-| Performance | Slightly faster build times | Slightly slower (type checking overhead) |
-
-#### Application ID Detection
-
-The parser intelligently detects multiple `applicationId` syntax patterns:
-
-- **Groovy old format**: `applicationId "com.example.app"`
-- **Groovy assignment**: `applicationId = "com.example.app"`
-- **Kotlin DSL assignment**: `applicationId = "com.example.app"`
-- **Kotlin DSL method call**: `applicationId("com.example.app")`
-
-Both single (`'`) and double (`"`) quotes are supported across all formats.
-
-#### What the Parser Does
-
-When you run `publish sign-android` or `publish config app-id`, the parser:
-1. Detects the gradle file type automatically
-2. Locates the `defaultConfig` block
-3. Extracts or updates the `applicationId` while preserving the original format
-4. Ensures your gradle file remains syntactically correct
-
-This means you can use **any** gradle format, and **publish** will handle it seamlessly without forcing you to change your project structure.
-
-</details>
+### iOS Support
+The `splash` command modifies the `LaunchScreen.storyboard` directly using color transformation logic to ensure your splash screen looks perfect on iOS devices.
 
 ---
 
-## Contributions:
+## 🤝 Contributing
 
-We welcome contributions to improve this package! Feel free to:
-
-- ⭐ **Star the project** on GitHub: [mubashardev/publish](https://github.com/mubashardev/publish)
-- 🐛 **Open an issue** if you find a bug or have a feature request
-- 🔧 **Submit a pull request** to contribute code improvements
-
-Visit us on GitHub: https://github.com/mubashardev/publish
+We welcome contributions!
+1. **Star** the repo on [GitHub](https://github.com/mubashardev/publish).
+2. **Open an issue** for bugs or feature requests.
+3. **Submit a PR** to help improve the tool.
 
 ---
 
-## License:
+## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

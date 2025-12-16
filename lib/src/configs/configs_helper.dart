@@ -1,4 +1,4 @@
-part of '../publish.dart';
+part of '../../publish.dart';
 
 class ConfigsHelper {
   static bool updateName(String name, String platform) {

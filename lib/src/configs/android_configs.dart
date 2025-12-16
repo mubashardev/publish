@@ -1,4 +1,4 @@
-part of '../publish.dart';
+part of '../../publish.dart';
 
 class _AndroidConfigs {
   static String get appName {
