@@ -1,3 +1,6 @@
+## [1.1.8] - 2025-12-16
+No user-facing changes.
+
 ## [1.1.7] - 2025-12-16
 ### ✨ Features
 - Add `init` command for interactive project setup, refactor `icons` command to expose static generation, and implement iOS splash screen updates.
