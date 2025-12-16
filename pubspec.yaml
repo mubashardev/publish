@@ -1,5 +1,5 @@
 name: publish
-description: "A Flutter package to simplify generating Android signing keys and creating signed bundles for Play Store publishing."
+description: "The ultimate Flutter CLI tool. Automate app configuration, asset generation (icons/splash), and release workflows (versioning/signing) with ease."
 version: 1.1.8
 homepage: https://mubashar.dev
 repository: https://github.com/mubashardev/publish.git
