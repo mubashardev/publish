@@ -42,6 +42,16 @@ publish changelog
 
 ---
 
+### 🧙‍♂️ Interactive Setup
+
+#### Publish Wizard:
+The easiest way to set up a new project. Guides you through App Name, Package ID, Icons, and Gitignore setup.
+```bash
+publish init
+```
+
+---
+
 ### 🩺 Project Health
 
 #### Project Doctor:

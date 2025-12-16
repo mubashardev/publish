@@ -17,7 +17,8 @@ void main(List<String> arguments) async {
     ..addCommand(DoctorCommand())
     ..addCommand(IgnoreCommand())
     ..addCommand(IconsCommand())
-    ..addCommand(SplashCommand());
+    ..addCommand(SplashCommand())
+    ..addCommand(InitCommand());
 
   try {
     await runner.run(arguments);

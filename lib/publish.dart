@@ -28,6 +28,7 @@ part 'src/commands/doctor_command.dart';
 part 'src/commands/changelog_command.dart';
 part 'src/commands/icons_command.dart';
 part 'src/commands/splash_command.dart';
+part 'src/commands/init_command.dart';
 
 class ReadAppConfigsCommand extends Command {
   @override

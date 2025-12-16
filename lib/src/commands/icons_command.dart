@@ -18,7 +18,7 @@ class IconsCommand extends Command {
   }
 
   @override
-  void run() {
+  void run() async {
     final filePath = argResults?['file'];
     final file = File(filePath);
 
@@ -29,7 +29,10 @@ class IconsCommand extends Command {
 
     _ConsoleUI.printHeader('🎨 Generating App Icons',
         subtitle: 'Processing $filePath...');
+    await generate(file);
+  }
 
+  static Future<void> generate(File file) async {
     try {
       final bytes = file.readAsBytesSync();
       final image = img.decodeImage(bytes);
@@ -51,7 +54,7 @@ class IconsCommand extends Command {
     }
   }
 
-  void _generateAndroidIcons(img.Image image) {
+  static void _generateAndroidIcons(img.Image image) {
     _ConsoleUI.printStatus('Android', 'Generating mipmap icons...');
     final androidRes = 'android/app/src/main/res';
 
@@ -77,7 +80,7 @@ class IconsCommand extends Command {
     }
   }
 
-  void _generateIosIcons(img.Image image) {
+  static void _generateIosIcons(img.Image image) {
     _ConsoleUI.printStatus('iOS', 'Generating AppIcon.appiconset...');
     final iosRes = 'ios/Runner/Assets.xcassets/AppIcon.appiconset';
     final dir = Directory(iosRes);
