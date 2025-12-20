@@ -1,3 +1,6 @@
+## [1.2.2] - 2025-12-20
+No user-facing changes.
+
 ## [1.2.1] - 2025-12-20
 ### ✨ Features
 - Introduce build commands, refactor signing commands, and enhance validation with loading UI.
