@@ -31,40 +31,75 @@ You can now use the `publish` command anywhere in your terminal.
 
 ## Quick Start
 
-### 1. Initialize a New Project
-Run the interactive wizard to set up your App Name, Package ID, Icons, and Gitignore in seconds:
+### Recommended Workflow
 
-```bash
-publish init
-```
+**For New Projects:**
+1. **Analyze** your project first:
+   ```bash
+   publish doctor
+   ```
+2. **Quick Setup** with the interactive wizard:
+   ```bash
+   publish init
+   ```
+3. **Verify** everything is configured:
+   ```bash
+   publish doctor
+   ```
 
-### 2. Check Project Health
-Ensure your project is ready for development or release:
-
-```bash
-publish doctor
-```
+**For Existing Projects:**
+1. Run `publish doctor` to identify issues
+2. Fix issues using suggested commands
+3. Build and sign your app for release
 
 ---
 
 ## Detailed Command Reference
 
-| Command & Arguments | Description | Usage Examples |
-|--------------------|-------------|----------------|
-| `init` | Interactive wizard to set up your project (App Name, ID, Icons, Gitignore). | `publish init` |
-| `doctor` | Diagnoses project health (Pubspec, Manifest, Gradle, Signing Keys, Package Name, Icons). | `publish doctor` |
-| `build android` | Validates project configuration (signing, icons, package ID) and builds an Android App Bundle. | `publish build android` |
-| `sign android` | Wizard to generate keystore, create `key.properties`, and configure `build.gradle` for release signing. | `publish sign android` |
-| `sign ios` | **(Coming Soon)** Wizard to configure iOS code signing and provisioning profiles. | `publish sign ios` |
-| `config app-name` | Updates the App Name for Android and/or iOS. | `publish config app-name --value "My App"`<br>`publish config app-name --value "My App" --platforms=ios` |
-| `config app-id` | Updates the Package Name (Android) and Bundle ID (iOS). | `publish config app-id --value "com.example.app"` |
-| `--read-configs` | Displays the current App Name and Package ID/Bundle ID for all platforms. | `publish --read-configs` |
-| `icons` | Generates all required icon sizes for Android and iOS from a source image. | `publish icons --file assets/logo.png` |
-| `splash` | Updates the native splash screen background color. | `publish splash --color "#121212"` |
-| `ignore` | Generates a standard Flutter `.gitignore` file. | `publish ignore` |
-| `version [type]` | Bumps the package version in `pubspec.yaml`. Types: `major`, `minor`, `patch`, `build`. | `publish version patch` (1.0.0 → 1.0.1)<br>`publish version major` (1.0.0 → 2.0.0) |
-| `changelog` | Adds a new entry to `CHANGELOG.md` for the current version. | `publish changelog` |
-| `update` | Updates the `publish` CLI package to the latest version. | `publish update` |
+### Core Commands
+
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `doctor` | **[Start Here]** Comprehensive project health check with 10+ validations (Flutter SDK, configs, signing, icons, git, etc.). Provides actionable fix suggestions. | `publish doctor` |
+| `init` | Quick setup wizard for App Name, Package ID, Icons, and Gitignore. Best used after running `doctor`. | `publish init` |
+| `show-config` | Display current app configurations (App Name, Package ID/Bundle ID). | `publish show-config` |
+| `--version` | Show publish CLI version and check for updates. | `publish --version` |
+
+### Build & Sign
+
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `build android` | Validates configuration and builds Android App Bundle (`.aab`). | `publish build android` |
+| `sign android` | Interactive wizard to generate keystore and configure release signing. | `publish sign android` |
+| `sign ios` | **(Coming Soon)** iOS code signing configuration wizard. | `publish sign ios` |
+
+### Configuration
+
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `config app-name` | Update App Name for Android and/or iOS. | `publish config app-name --value "My App"`<br>`publish config app-name --platforms=ios` |
+| `config app-id` | Update Package Name (Android) and Bundle ID (iOS). | `publish config app-id --value "com.example.app"` |
+
+### Assets
+
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `icons` | Generate all required icon sizes for Android and iOS from a single source image. | `publish icons --file assets/logo.png` |
+| `splash` | Update native splash screen background color. | `publish splash --color "#121212"` |
+| `ignore` | Generate a standard Flutter `.gitignore` file. | `publish ignore` |
+
+### Version Management
+
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `version [type]` | Bump version in `pubspec.yaml`. Types: `major`, `minor`, `patch`, `build`. | `publish version patch` (1.0.0 → 1.0.1)<br>`publish version major` (1.0.0 → 2.0.0) |
+| `changelog` | Add a new entry to `CHANGELOG.md` for the current version. | `publish changelog` |
+
+### Maintenance
+
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `update` | Update the publish CLI to the latest version. | `publish update` |
 
 ---
 

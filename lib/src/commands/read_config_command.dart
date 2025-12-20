@@ -6,7 +6,7 @@ class ReadAppConfigsCommand extends Command {
       'Check current configurations of your flutter app ie. app name, package name, etc.';
 
   @override
-  String get name => '--read-configs';
+  String get name => 'show-config';
 
   @override
   void run() {

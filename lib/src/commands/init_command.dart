@@ -5,12 +5,17 @@ class InitCommand extends Command {
   String get name => 'init';
 
   @override
-  String get description => 'Interactive wizard to set up your project.';
+  String get description =>
+      'Quick setup wizard for configuring your app (run "publish doctor" first for best results).';
 
   @override
   void run() async {
     _ConsoleUI.printHeader('🧙 Publish Wizard',
-        subtitle: 'Setting up your project...');
+        subtitle: 'Quick Setup for Your App');
+
+    _ConsoleUI.printInfo(
+        'Tip: Run "publish doctor" first to see what needs attention.');
+    _ConsoleUI.printEmpty();
 
     // 1. App Name
     if (_ConsoleUI.promptConfirm('Do you want to update the App Name?')) {

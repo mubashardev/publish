@@ -100,4 +100,53 @@ class UpdateHelper {
       }
     } catch (_) {}
   }
+
+  /// Prints detailed version information and update suggestions
+  static Future<void> printVersionInfo() async {
+    _ConsoleUI.printHeader('📦 Publish CLI Info');
+
+    // 1. Current Version
+    final current = await installedVersion;
+    _ConsoleUI.printStatus('Current Version', current, color: green);
+
+    // 2. Last Updated (Approximate via script modification time)
+    try {
+      final scriptFile = File(Platform.script.toFilePath());
+      if (scriptFile.existsSync()) {
+        final lastMod = scriptFile.lastModifiedSync();
+        final formattedDate =
+            "${lastMod.year}-${lastMod.month.toString().padLeft(2, '0')}-${lastMod.day.toString().padLeft(2, '0')} ${lastMod.hour.toString().padLeft(2, '0')}:${lastMod.minute.toString().padLeft(2, '0')}";
+        _ConsoleUI.printStatus('Last Updated', formattedDate, color: cyan);
+      }
+    } catch (_) {
+      // Ignore if cannot determine
+    }
+
+    // 3. Latest Version Check
+    _ConsoleUI.startLoading('Checking for updates...');
+    try {
+      final latest = await _PubspecAPI.getLatestVersion("publish");
+      _ConsoleUI.stopLoading(success: true, message: 'Version check complete');
+
+      if (latest != null) {
+        if (latest != current && current != 'Unknown') {
+          _ConsoleUI.printStatus('Latest Version', latest, color: yellow);
+          stdout.writeln('');
+          _ConsoleUI.printWarning('Update Available! 🚀');
+          stdout.writeln(
+              '  Run ${cyan}publish update$reset to get the latest features.');
+        } else {
+          _ConsoleUI.printStatus('Latest Version', latest, color: green);
+          stdout.writeln(
+              '\n  ${green}✓$reset You are using the latest version of publish.');
+        }
+      } else {
+        _ConsoleUI.printStatus('Latest Version', 'Check Failed', color: red);
+      }
+    } catch (e) {
+      _ConsoleUI.stopLoading(
+          success: false, message: 'Failed to check updates');
+    }
+    _ConsoleUI.printEmpty();
+  }
 }
