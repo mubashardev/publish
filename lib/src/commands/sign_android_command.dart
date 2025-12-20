@@ -23,7 +23,7 @@ class SignAndroidCommand extends Command {
       final success = await _AndroidSigning.sign();
       if (success) {
         _ConsoleUI.printSuccess('Android signing configured successfully!');
-        _ConsoleUI.printInfo('You can now run: flutter build appbundle');
+        _ConsoleUI.printInfo('You can now run: publish build android');
       } else {
         _ConsoleUI.printError('Android signing configuration failed.');
       }
