@@ -35,20 +35,22 @@ class IconsCommand extends Command {
   static Future<void> generate(File file) async {
     _ConsoleUI.startLoading('Generating App Icons...');
     try {
-      final bytes = file.readAsBytesSync();
-      final image = img.decodeImage(bytes);
+      final bytes = await file.readAsBytes(); // Async read to not block
 
-      if (image == null) {
-        _ConsoleUI.stopLoading(
-            success: false, message: 'Could not decode image file.');
-        return;
-      }
+      // Run computationally expensive decoding and resizing in an Isolate
+      await Isolate.run(() async {
+        final image = img.decodeImage(bytes);
 
-      // Android Icons
-      _generateAndroidIcons(image);
+        if (image == null) {
+          throw Exception('Could not decode image file.');
+        }
 
-      // iOS Icons
-      _generateIosIcons(image);
+        // Android Icons
+        _generateAndroidIcons(image);
+
+        // iOS Icons
+        _generateIosIcons(image);
+      });
 
       _ConsoleUI.stopLoading(
           success: true, message: 'Icons generated successfully! 🚀');

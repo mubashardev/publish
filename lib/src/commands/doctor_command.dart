@@ -8,9 +8,16 @@ class DoctorCommand extends Command {
   String get description => 'Check your project for potential issues.';
 
   @override
-  void run() {
-    _ConsoleUI.printHeader('🩺 Project Doctor',
-        subtitle: 'Analyzing Health...');
+  void run() async {
+    _ConsoleUI.printHeader('🩺 Project Doctor');
+
+    _ConsoleUI.startLoading('Analyzing Health...');
+
+    // Artificial delay to ensure user sees the "Analyzing" animation
+    await Future.delayed(Duration(milliseconds: 1500));
+
+    _ConsoleUI.stopLoading(success: true, message: 'Analysis Complete');
+    _ConsoleUI.printEmpty();
 
     bool allGood = true;
 

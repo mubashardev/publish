@@ -2,6 +2,7 @@ library publish;
 
 import 'dart:io';
 import 'dart:async';
+import 'dart:isolate';
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
