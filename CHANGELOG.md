@@ -1,3 +1,6 @@
+## [1.2.3] - 2025-12-20
+No user-facing changes.
+
 ## [1.2.2] - 2025-12-20
 No user-facing changes.
 
