@@ -47,6 +47,11 @@ class _ConsoleUI {
     stdout.writeln('');
   }
 
+  /// Prints an empty line
+  static void printEmpty() {
+    stdout.writeln('');
+  }
+
   /// Prints a key-value pair with alignment
   // ignore: unused_element
   static void printKeyValue(String key, String value, {String? color}) {
@@ -200,5 +205,56 @@ class _ConsoleUI {
     final left = ' ' * padding;
     final right = ' ' * (width - text.length - padding);
     return '$left$text$right';
+  }
+
+  static _Loader? _currentLoader;
+
+  static void startLoading(String message) {
+    _currentLoader?.stop(success: true); // Stop existing if any
+    _currentLoader = _Loader(message)..start();
+  }
+
+  static void stopLoading({bool success = true, String? message}) {
+    _currentLoader?.stop(success: success, customMessage: message);
+    _currentLoader = null;
+  }
+}
+
+class _Loader {
+  final String message;
+  Timer? _timer;
+  int _frameIndex = 0;
+  static const List<String> _frames = [
+    '⠋',
+    '⠙',
+    '⠹',
+    '⠸',
+    '⠼',
+    '⠴',
+    '⠦',
+    '⠧',
+    '⠇',
+    '⠏'
+  ];
+
+  _Loader(this.message);
+
+  void start() {
+    stdout.write('\x1B[?25l'); // Hide cursor
+    _timer = Timer.periodic(Duration(milliseconds: 80), (timer) {
+      final frame = _frames[_frameIndex % _frames.length];
+      stdout.write('\r  $cyan$frame$reset $message');
+      _frameIndex++;
+    });
+  }
+
+  void stop({bool success = true, String? customMessage}) {
+    _timer?.cancel();
+    stdout.write('\r\x1B[K'); // Clear line
+    stdout.write('\x1B[?25h'); // Show cursor
+
+    final icon = success ? '${green}✓$reset' : '${red}✗$reset';
+    final msg = customMessage ?? message;
+    stdout.writeln('  $icon $msg');
   }
 }

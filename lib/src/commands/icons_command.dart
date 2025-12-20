@@ -33,12 +33,14 @@ class IconsCommand extends Command {
   }
 
   static Future<void> generate(File file) async {
+    _ConsoleUI.startLoading('Generating App Icons...');
     try {
       final bytes = file.readAsBytesSync();
       final image = img.decodeImage(bytes);
 
       if (image == null) {
-        _ConsoleUI.printError('Could not decode image file.');
+        _ConsoleUI.stopLoading(
+            success: false, message: 'Could not decode image file.');
         return;
       }
 
@@ -48,9 +50,11 @@ class IconsCommand extends Command {
       // iOS Icons
       _generateIosIcons(image);
 
-      _ConsoleUI.printSuccess('Icons generated successfully! 🚀');
+      _ConsoleUI.stopLoading(
+          success: true, message: 'Icons generated successfully! 🚀');
     } catch (e) {
-      _ConsoleUI.printError('Error generating icons: $e');
+      _ConsoleUI.stopLoading(
+          success: false, message: 'Error generating icons: $e');
     }
   }
 

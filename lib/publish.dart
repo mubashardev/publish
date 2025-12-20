@@ -1,6 +1,7 @@
 library publish;
 
 import 'dart:io';
+import 'dart:async';
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -35,3 +36,7 @@ part 'src/commands/read_config_command.dart';
 part 'src/commands/write_config_command.dart';
 part 'src/commands/update_command.dart';
 part 'src/commands/sign_android_command.dart';
+part 'src/commands/sign_command.dart';
+part 'src/commands/sign_ios_command.dart';
+part 'src/commands/build_command.dart';
+part 'src/commands/build_android_command.dart';

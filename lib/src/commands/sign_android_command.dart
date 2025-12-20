@@ -1,11 +1,11 @@
 part of '../../publish.dart';
 
-class AndroidSignCommand extends Command {
+class SignAndroidCommand extends Command {
   @override
   String get description => 'Set up Android signing configurations.';
 
   @override
-  String get name => 'sign-android';
+  String get name => 'android';
 
   @override
   void run() async {

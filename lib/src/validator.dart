@@ -92,4 +92,15 @@ class _Validator {
     // Check if the app name matches the pattern
     return appNameRegex.hasMatch(name);
   }
+
+  static bool isDefaultPackageName(String appId) {
+    return appId.startsWith('com.example');
+  }
+
+  static bool get isAppIconExists {
+    // Check for default android icon path.
+    // Note: This is a basic check.
+    return File('android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png')
+        .existsSync();
+  }
 }

@@ -50,10 +50,6 @@ class DoctorCommand extends Command {
 
     // 5. Check Signing Key
     if (_Validator.isGradleValid) {
-      // Only check key properties if gradle is arguably there,
-      // essentially we want to check key.properties file existence.
-      // There isn't a direct public validator for key.properties in _Validator,
-      // but we can check the file directly.
       final keyProps = File('android/key.properties');
       if (keyProps.existsSync()) {
         _ConsoleUI.printStatus('Signing Config', 'key.properties found',
@@ -61,8 +57,28 @@ class DoctorCommand extends Command {
       } else {
         _ConsoleUI.printStatus('Signing Config', 'key.properties missing',
             color: yellow);
-        // Not strictly "Error" as they might not have set it up yet, but for "publish" package context usually they want it.
+        allGood = false; // Now considering this an issue for "publish" context
       }
+    }
+
+    // 6. Check Package Name
+    if (_Validator.isGradleValid) {
+      final appId = _AndroidConfigs.appId;
+      if (_Validator.isDefaultPackageName(appId)) {
+        _ConsoleUI.printStatus('Package Name', 'Default ($appId) ⚠️',
+            color: red);
+        allGood = false;
+      } else {
+        _ConsoleUI.printStatus('Package Name', 'Valid ($appId)', color: green);
+      }
+    }
+
+    // 7. Check Icons
+    if (_Validator.isAppIconExists) {
+      _ConsoleUI.printStatus('App Icons', 'Found', color: green);
+    } else {
+      _ConsoleUI.printStatus('App Icons', 'Missing or Default', color: yellow);
+      // Not strictly fatal for generic projects but bad for publishing
     }
 
     stdout.writeln('');
