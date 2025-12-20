@@ -1,3 +1,10 @@
+## [1.2.1] - 2025-12-20
+### ✨ Features
+- Introduce build commands, refactor signing commands, and enhance validation with loading UI.
+
+### 🔧 Improvements
+- Update custom funding URL
+
 ## [1.2.0] - 2025-12-16
 No user-facing changes.
 
