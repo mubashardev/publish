@@ -189,11 +189,16 @@ class _ConsoleUI {
     stdout.writeln('');
   }
 
-  /// Prints a status line with progress
+  /// Prints a status line with progress, optionally with a fix suggestion
   // ignore: unused_element
-  static void printStatus(String status, String value, {String? color}) {
+  static void printStatus(String status, String value,
+      {String? color, String? fix}) {
     final colorCode = color ?? cyan;
-    stdout.writeln('  $status $colorCode→$reset $value');
+    stdout.write('  $status $colorCode→$reset $value');
+    if (fix != null) {
+      stdout.write('  \x1B[35m(Fix: $fix)$reset');
+    }
+    stdout.writeln();
   }
 
   /// Centers text within a given width

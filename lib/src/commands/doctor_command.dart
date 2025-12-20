@@ -25,7 +25,8 @@ class DoctorCommand extends Command {
     if (_Validator.isPubspecValid) {
       _ConsoleUI.printStatus('Pubspec', 'Valid', color: green);
     } else {
-      _ConsoleUI.printStatus('Pubspec', 'Invalid or Missing', color: red);
+      _ConsoleUI.printStatus('Pubspec', 'Invalid or Missing',
+          color: red, fix: 'flutter create .');
       allGood = false;
     }
 
@@ -34,7 +35,7 @@ class DoctorCommand extends Command {
       _ConsoleUI.printStatus('Android Manifest', 'Valid', color: green);
     } else {
       _ConsoleUI.printStatus('Android Manifest', 'Invalid or Missing',
-          color: red);
+          color: red, fix: 'flutter create .');
       allGood = false;
     }
 
@@ -42,7 +43,8 @@ class DoctorCommand extends Command {
     if (_Validator.isGradleValid) {
       _ConsoleUI.printStatus('Gradle Config', 'Valid', color: green);
     } else {
-      _ConsoleUI.printStatus('Gradle Config', 'Invalid or Missing', color: red);
+      _ConsoleUI.printStatus('Gradle Config', 'Invalid or Missing',
+          color: red, fix: 'flutter create .');
       allGood = false;
     }
 
@@ -51,7 +53,7 @@ class DoctorCommand extends Command {
       _ConsoleUI.printStatus('iOS Info.plist', 'Valid', color: green);
     } else {
       _ConsoleUI.printStatus('iOS Info.plist', 'Invalid or Missing',
-          color: red);
+          color: red, fix: 'flutter create .');
       allGood = false;
     }
 
@@ -63,7 +65,7 @@ class DoctorCommand extends Command {
             color: green);
       } else {
         _ConsoleUI.printStatus('Signing Config', 'key.properties missing',
-            color: yellow);
+            color: yellow, fix: 'publish sign android');
         allGood = false; // Now considering this an issue for "publish" context
       }
     }
@@ -73,7 +75,7 @@ class DoctorCommand extends Command {
       final appId = _AndroidConfigs.appId;
       if (_Validator.isDefaultPackageName(appId)) {
         _ConsoleUI.printStatus('Package Name', 'Default ($appId) ⚠️',
-            color: red);
+            color: red, fix: 'publish config app-id --value "com.your.app"');
         allGood = false;
       } else {
         _ConsoleUI.printStatus('Package Name', 'Valid ($appId)', color: green);
@@ -84,7 +86,8 @@ class DoctorCommand extends Command {
     if (_Validator.isAppIconExists) {
       _ConsoleUI.printStatus('App Icons', 'Found', color: green);
     } else {
-      _ConsoleUI.printStatus('App Icons', 'Missing or Default', color: yellow);
+      _ConsoleUI.printStatus('App Icons', 'Missing or Default',
+          color: yellow, fix: 'publish icons');
       // Not strictly fatal for generic projects but bad for publishing
     }
 
