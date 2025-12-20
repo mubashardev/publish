@@ -52,11 +52,13 @@ publish doctor
 | Command & Arguments | Description | Usage Examples |
 |--------------------|-------------|----------------|
 | `init` | Interactive wizard to set up your project (App Name, ID, Icons, Gitignore). | `publish init` |
-| `doctor` | Diagnoses project health (Pubspec, Manifest, Gradle, Signing Keys). | `publish doctor` |
+| `doctor` | Diagnoses project health (Pubspec, Manifest, Gradle, Signing Keys, Package Name, Icons). | `publish doctor` |
+| `build android` | Validates project configuration (signing, icons, package ID) and builds an Android App Bundle. | `publish build android` |
+| `sign android` | Wizard to generate keystore, create `key.properties`, and configure `build.gradle` for release signing. | `publish sign android` |
+| `sign ios` | **(Coming Soon)** Wizard to configure iOS code signing and provisioning profiles. | `publish sign ios` |
 | `config app-name` | Updates the App Name for Android and/or iOS. | `publish config app-name --value "My App"`<br>`publish config app-name --value "My App" --platforms=ios` |
 | `config app-id` | Updates the Package Name (Android) and Bundle ID (iOS). | `publish config app-id --value "com.example.app"` |
 | `--read-configs` | Displays the current App Name and Package ID/Bundle ID for all platforms. | `publish --read-configs` |
-| `sign-android` | interactive wizard generates a keystore, creates `key.properties`, and configures `build.gradle` for release signing. | `publish sign-android` |
 | `icons` | Generates all required icon sizes for Android and iOS from a source image. | `publish icons --file assets/logo.png` |
 | `splash` | Updates the native splash screen background color. | `publish splash --color "#121212"` |
 | `ignore` | Generates a standard Flutter `.gitignore` file. | `publish ignore` |
