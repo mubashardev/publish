@@ -1,3 +1,8 @@
+## [1.2.4] - 2025-12-25
+### 🐛 Bug Fixes
+- Update suggested command after successful Android signing.
+
+
 ## [1.2.3] - 2025-12-20
 No user-facing changes.
 
