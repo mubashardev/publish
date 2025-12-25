@@ -161,6 +161,13 @@ storeFile=../../$keystorePath
   }
 
   static String _configureBuildConfigKts(String content) {
+    // Check if import statement exists, add it if missing
+    const String propertiesImport = 'import java.util.Properties';
+    if (!content.contains(propertiesImport)) {
+      // Add import at the very top of the file
+      content = '$propertiesImport\n\n$content';
+    }
+
     List<String> buildfile = content.split('\n');
     buildfile = buildfile.map((line) {
       if (line.contains(RegExp("android\\s*\\{"))) {
