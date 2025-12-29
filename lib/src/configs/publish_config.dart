@@ -200,7 +200,7 @@ class ConfigsManager {
     save();
   }
 
-  Future<void> setActiveConfig(String name) async {
+  Future<void> setActiveConfig(String name, {bool restoreAssets = true}) async {
     final config = _configs.firstWhere((c) => c.name == name,
         orElse: () => throw Exception('Config $name not found'));
 
@@ -261,9 +261,11 @@ class ConfigsManager {
       _updatePubspecVersion(config.appVersion!);
     }
 
-    // 6. Restore icons and splash for this config
-    _restoreIcons(config);
-    _restoreSplash(config);
+    // 6. Restore icons and splash for this config (if requested)
+    if (restoreAssets) {
+      _restoreIcons(config);
+      _restoreSplash(config);
+    }
 
     _ConsoleUI.printSuccess('Switched to configuration: $name');
     _ConsoleUI.printInfo(
@@ -356,8 +358,7 @@ class ConfigsManager {
   }
 
   /// Backup a directory's contents to a destination
-  void _backupDirectory(String source, String destination,
-      {bool Function(String)? filter}) {
+  void _backupDirectory(String source, String destination) {
     final sourceDir = Directory(source);
     if (!sourceDir.existsSync()) return;
 
@@ -365,14 +366,14 @@ class ConfigsManager {
     if (!destDir.existsSync()) destDir.createSync(recursive: true);
 
     for (var entity in sourceDir.listSync()) {
-      final name = entity.uri.pathSegments.last;
+      final name = entity.path.split(Platform.pathSeparator).last;
 
-      if (filter != null && !filter(name)) continue;
+      final newPath = '${destDir.path}${Platform.pathSeparator}$name';
 
       if (entity is Directory) {
-        _copyDirectory(entity.path, '${destDir.path}/$name');
+        _copyRecursive(entity.path, newPath);
       } else if (entity is File) {
-        entity.copySync('${destDir.path}/$name');
+        entity.copySync(newPath);
       }
     }
   }
@@ -383,12 +384,13 @@ class ConfigsManager {
     if (!sourceDir.existsSync()) return;
 
     for (var entity in sourceDir.listSync()) {
-      final name = entity.uri.pathSegments.last;
+      final name = entity.path.split(Platform.pathSeparator).last;
+      final destPath = '$destination${Platform.pathSeparator}$name';
 
       if (entity is Directory) {
-        _copyDirectory(entity.path, '$destination/$name');
+        _copyRecursive(entity.path, destPath);
       } else if (entity is File) {
-        final destFile = File('$destination/$name');
+        final destFile = File(destPath);
         if (!destFile.parent.existsSync()) {
           destFile.parent.createSync(recursive: true);
         }
@@ -398,18 +400,20 @@ class ConfigsManager {
   }
 
   /// Copy a directory recursively
-  void _copyDirectory(String source, String destination) {
+  void _copyRecursive(String source, String destination) {
     final sourceDir = Directory(source);
     final destDir = Directory(destination);
 
     if (!destDir.existsSync()) destDir.createSync(recursive: true);
 
     for (var entity in sourceDir.listSync()) {
-      final name = entity.uri.pathSegments.last;
+      final name = entity.path.split(Platform.pathSeparator).last;
+      final newPath = '${destDir.path}${Platform.pathSeparator}$name';
+
       if (entity is Directory) {
-        _copyDirectory(entity.path, '${destDir.path}/$name');
+        _copyRecursive(entity.path, newPath);
       } else if (entity is File) {
-        entity.copySync('${destDir.path}/$name');
+        entity.copySync(newPath);
       }
     }
   }
@@ -448,5 +452,57 @@ class ConfigsManager {
     _backupIcons(config);
     _backupSplash(config);
     _ConsoleUI.printSuccess('Icons and splash backed up for ${config.name}');
+  }
+
+  /// Backup the keystore file to the config directory and return the new path
+  String backupKeystore(PublishConfig config) {
+    // Resolve source path
+    // We assume the path in config is relative to android/app (Gradle default)
+    // or absolute.
+    File sourceFile = File(config.keystorePath);
+    if (!sourceFile.isAbsolute) {
+      // Try resolving relative to android/app
+      final appRel = File('android/app/${config.keystorePath}');
+      if (appRel.existsSync()) {
+        sourceFile = appRel;
+      } else {
+        // Try resolving relative to properties file if known
+        if (config.propertiesFilePath != null) {
+          final propFile = File(config.propertiesFilePath!);
+          final propRel =
+              File('${propFile.parent.path}/${config.keystorePath}');
+          if (propRel.existsSync()) {
+            sourceFile = propRel;
+          }
+        }
+
+        // Fallback: Check if it exists relative to root (rare but possible)
+        if (!sourceFile.existsSync()) {
+          // If we can't find it, we can't backup it.
+          _ConsoleUI.printWarning(
+              'Could not locate keystore at ${config.keystorePath} to backup.');
+          return config.keystorePath;
+        }
+      }
+    }
+
+    if (!sourceFile.existsSync()) {
+      _ConsoleUI.printWarning('Keystore file not found at ${sourceFile.path}');
+      return config.keystorePath;
+    }
+
+    final fileName = sourceFile.path.split(Platform.pathSeparator).last;
+    final destPath = '${config.configDir}${Platform.pathSeparator}$fileName';
+    final destFile = File(destPath);
+
+    if (!destFile.parent.existsSync()) {
+      destFile.parent.createSync(recursive: true);
+    }
+
+    sourceFile.copySync(destPath);
+    _ConsoleUI.printSuccess('Keystore backed up to $destPath');
+
+    // Return the new path (Absolute is safest for Gradle injection)
+    return destFile.absolute.path;
   }
 }

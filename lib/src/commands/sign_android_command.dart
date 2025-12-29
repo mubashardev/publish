@@ -38,14 +38,26 @@ class SignAndroidCommand extends Command {
           final legacyConfig =
               await _AndroidSigning.createConfigFromCurrent(legacyName);
           if (legacyConfig != null) {
+            String newKeystorePath = legacyConfig.keystorePath;
+            bool backedUp = false;
+
             if (_ConsoleUI.promptConfirm(
-                'Do you want to backup current icons and splash screen for this configuration?',
+                'Do you want to fully import this configuration (Icons, Splash, Keystore)?',
                 defaultYes: true)) {
               ConfigsManager().backupIconsForNewConfig(legacyConfig);
+              newKeystorePath = ConfigsManager().backupKeystore(legacyConfig);
+              backedUp = true;
             }
-            ConfigsManager().addConfig(legacyConfig);
-            await ConfigsManager().setActiveConfig(
-                legacyConfig.name); // This will just confirm it as active
+
+            // If backup happened, update the config to point to the new keystore path
+            final finalConfig = backedUp
+                ? legacyConfig.copyWith(keystorePath: newKeystorePath)
+                : legacyConfig;
+
+            ConfigsManager().addConfig(finalConfig);
+            // This will just confirm it as active, but we skip restore because we just created it from current state
+            await ConfigsManager()
+                .setActiveConfig(finalConfig.name, restoreAssets: false);
             _ConsoleUI.printSuccess('Current settings saved as "$legacyName"!');
           }
         }
@@ -99,7 +111,8 @@ class SignAndroidCommand extends Command {
         ConfigsManager().addConfig(config);
 
         // This handles switching AND showing the restore messages + switch tip
-        await ConfigsManager().setActiveConfig(config.name);
+        await ConfigsManager()
+            .setActiveConfig(config.name, restoreAssets: false);
 
         _ConsoleUI.printSuccess('Android signing configured successfully!');
         _ConsoleUI.printInfo('Configuration "${config.name}" is now active.');
