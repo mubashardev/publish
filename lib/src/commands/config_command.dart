@@ -313,20 +313,34 @@ class _ConfigExportCommand extends Command {
     // Copy config directory contents
     final configDir = Directory(config.configDir);
     if (configDir.existsSync()) {
-      _copyDirectoryContents(configDir.path, '${tempDir.path}/files');
+      _copyDirectoryContents(configDir.path, '${tempDir.path}/$name');
     }
 
     // Create zip using shell command
-    final result = Process.runSync('zip', ['-r', zipPath, '.'],
-        workingDirectory: tempDir.path);
+    // Create zip using shell command
+    try {
+      final result = Process.runSync(
+          'zip', ['-r', File(zipPath).absolute.path, '.'],
+          workingDirectory: tempDir.path);
 
-    // Cleanup temp
-    tempDir.deleteSync(recursive: true);
+      // Cleanup temp
+      tempDir.deleteSync(recursive: true);
 
-    if (result.exitCode == 0) {
-      _ConsoleUI.printSuccess('Exported to: $zipPath');
-    } else {
-      _ConsoleUI.printError('Failed to create zip: ${result.stderr}');
+      if (result.exitCode == 0) {
+        _ConsoleUI.printSuccess('Exported to: $zipPath');
+      } else {
+        _ConsoleUI.printError('Failed to create zip:');
+        if (result.stdout.toString().isNotEmpty) {
+          print('Stdout: ${result.stdout}');
+        }
+        if (result.stderr.toString().isNotEmpty) {
+          print('Stderr: ${result.stderr}');
+        }
+      }
+    } catch (e) {
+      // Cleanup temp even on crash
+      if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
+      _ConsoleUI.printError('Failed to execute zip command: $e');
     }
   }
 
@@ -336,7 +350,7 @@ class _ConfigExportCommand extends Command {
     if (!destDir.existsSync()) destDir.createSync(recursive: true);
 
     for (var entity in sourceDir.listSync(recursive: false)) {
-      final name = entity.uri.pathSegments.last;
+      final name = entity.path.split(Platform.pathSeparator).last;
       if (entity is Directory) {
         _copyDirectoryContents(entity.path, '$destination/$name');
       } else if (entity is File) {
@@ -409,7 +423,12 @@ class _ConfigImportCommand extends Command {
       }
 
       // Copy files to publish_configs
-      final filesDir = Directory('${tempDir.path}/files');
+      // Check for new structure (folder named as config.name) or old structure (files/)
+      var filesDir = Directory('${tempDir.path}/${config.name}');
+      if (!filesDir.existsSync()) {
+        filesDir = Directory('${tempDir.path}/files');
+      }
+
       if (filesDir.existsSync()) {
         final destDir = Directory(config.configDir);
         if (destDir.existsSync()) destDir.deleteSync(recursive: true);
