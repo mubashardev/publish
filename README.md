@@ -8,12 +8,13 @@
 
 ## Features
 
-- **Interactive Setup**: Wizard-style setup for new projects (`init`).
-- **Release Workflow**: Automate version bumps and changelog updates.
-- **Asset Management**: Generate icons (`Android/iOS`) and splash screens from a single file.
-- **Project Doctor**: Diagnose and fix configuration issues (`pubspec`, `gradle`, `manifest`).
-- **Android Signing**: Auto-generate keystores and modify `build.gradle` safely.
-- **App Config**: Update App Name and Package ID across platforms with one command.
+- **🚀 Interactive Setup**: Wizard-style setup for new projects (`init`).
+- **🔀 Multi-Config Support**: Manage multiple environments (dev, staging, prod) with unique App Names, Package IDs, Icons, and Splash Screens.
+- **🎨 Asset Management**: Generate icons (`Android/iOS`) and splash screens from a single file. **Preserves assets per configuration!**
+- **🏗️ Release Workflow**: Automate version bumps and changelog updates.
+- **⚕️ Project Doctor**: Diagnose and fix configuration issues (`pubspec`, `gradle`, `manifest`).
+- **🔐 Android Signing**: Auto-generate keystores and modify `build.gradle` safely.
+- **📦 Import/Export**: Share configurations across teams with ease.
 
 ---
 
@@ -48,9 +49,42 @@ You can now use the `publish` command anywhere in your terminal.
    ```
 
 **For Existing Projects:**
-1. Run `publish doctor` to identify issues
-2. Fix issues using suggested commands
-3. Build and sign your app for release
+1. Run `publish doctor` to identify issues.
+2. Fix issues using suggested commands.
+3. Create configurations for different environments (e.g., `staging`, `prod`).
+
+---
+
+## 🔥 Multi-Configuration System
+
+`publish` introduces a powerful configuration system that lets you switch between different app profiles instantly. Each profile maintains its own:
+- **App Name** & **Package ID**
+- **Keystore** & **Signing Credentials**
+- **App Icons** (Android & iOS)
+- **Splash Screen**
+- **Version Suffix** (e.g., `-beta`)
+
+### Managing Configs
+
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `config list` | List all configs & active status. | `publish config list` |
+| `config switch` | Switch active profile. Restores icons/splash. | `publish config switch production` |
+| `config export` | Export config as zip (e.g., for team). | `publish config export production` |
+| `config import` | Import config from zip. | `publish config import ./config.zip` |
+| `config edit` | Edit config settings interactively. | `publish config edit production` |
+| `config delete` | Delete a configuration. | `publish config delete staging` |
+| `config rename` | Rename a configuration. | `publish config rename old new` |
+
+### Building with Configs
+
+You can build with a specific configuration without permanently switching to it:
+
+```bash
+publish build android --config staging
+```
+
+This temporary applies the `staging` profile (icons, ids, signing), builds the app, and reverts to your previous state.
 
 ---
 
@@ -58,55 +92,47 @@ You can now use the `publish` command anywhere in your terminal.
 
 ### Core Commands
 
-| Command | Description | Usage |
-|---------|-------------|-------|
-| `doctor` | **[Start Here]** Comprehensive project health check with 10+ validations (Flutter SDK, configs, signing, icons, git, etc.). Provides actionable fix suggestions. | `publish doctor` |
-| `init` | Quick setup wizard for App Name, Package ID, Icons, and Gitignore. Best used after running `doctor`. | `publish init` |
-| `show-config` | Display current app configurations (App Name, Package ID/Bundle ID). | `publish show-config` |
-| `--version` | Show publish CLI version and check for updates. | `publish --version` |
+| Command | Description |
+|---------|-------------|
+| `doctor` | **[Start Here]** Comprehensive health check (Flutter SDK, configs, signing, icons, git, etc.). |
+| `init` | Quick setup wizard for App Name, Package ID, Icons, and Gitignore. |
+| `show-config` | Display current app configurations (App Name, Package ID/Bundle ID). |
+| `set` | Quickly set App Name or Package ID for current config. |
 
 ### Build & Sign
 
-| Command | Description | Usage |
-|---------|-------------|-------|
-| `build android` | Validates configuration and builds Android App Bundle (`.aab`). | `publish build android` |
-| `sign android` | Interactive wizard to generate keystore and configure release signing. | `publish sign android` |
-| `sign ios` | **(Coming Soon)** iOS code signing configuration wizard. | `publish sign ios` |
-
-### Configuration
-
-| Command | Description | Usage |
-|---------|-------------|-------|
-| `config app-name` | Update App Name for Android and/or iOS. | `publish config app-name --value "My App"`<br>`publish config app-name --platforms=ios` |
-| `config app-id` | Update Package Name (Android) and Bundle ID (iOS). | `publish config app-id --value "com.example.app"` |
+| Command | Description |
+|---------|-------------|
+| `build android` | Validates configuration and builds Android App Bundle (`.aab`). Supports `--config`. |
+| `sign android` | Wizard to create a new configuration with keystore, icons, and signing setup. |
 
 ### Assets
 
-| Command | Description | Usage |
-|---------|-------------|-------|
-| `icons` | Generate all required icon sizes for Android and iOS from a single source image. | `publish icons --file assets/logo.png` |
-| `splash` | Update native splash screen background color. | `publish splash --color "#121212"` |
-| `ignore` | Generate a standard Flutter `.gitignore` file. | `publish ignore` |
+| Command | Description |
+|---------|-------------|
+| `icons` | Generate all icon sizes for Android and iOS from a single source image. |
+| `splash` | Update native splash screen background color (Android/iOS). |
+| `ignore` | Generate a standard Flutter `.gitignore` file. |
 
 ### Version Management
 
-| Command | Description | Usage |
-|---------|-------------|-------|
-| `version [type]` | Bump version in `pubspec.yaml`. Types: `major`, `minor`, `patch`, `build`. | `publish version patch` (1.0.0 → 1.0.1)<br>`publish version major` (1.0.0 → 2.0.0) |
-| `changelog` | Add a new entry to `CHANGELOG.md` for the current version. | `publish changelog` |
+| Command | Description |
+|---------|-------------|
+| `version` | Bump version (`major`, `minor`, `patch`, `build`). |
+| `changelog` | Add a new entry to `CHANGELOG.md` for the current version. |
 
 ### Maintenance
 
-| Command | Description | Usage |
-|---------|-------------|-------|
-| `update` | Update the publish CLI to the latest version. | `publish update` |
+| Command | Description |
+|---------|-------------|
+| `update` | Update the publish CLI to the latest version. |
 
 ---
 
 ## Advanced Usage
 
 ### Gradle Format Support
-`publish` intelligently detects and handles both **Groovy** (`build.gradle`) and **Kotlin DSL** (`build.gradle.kts`) formats. Whether you use the legacy or modern Android build system, `publish` will correctly parse and update your `applicationId` and signing configs without breaking your build scripts.
+`publish` intelligently detects and handles both **Groovy** (`build.gradle`) and **Kotlin DSL** (`build.gradle.kts`) formats.
 
 ### iOS Support
 The `splash` command modifies the `LaunchScreen.storyboard` directly using color transformation logic to ensure your splash screen looks perfect on iOS devices.
