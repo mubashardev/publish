@@ -7,8 +7,34 @@ class BuildAndroidCommand extends Command {
   @override
   String get description => 'Build Android App Bundle with validation.';
 
+  BuildAndroidCommand() {
+    argParser.addOption(
+      'config',
+      abbr: 'c',
+      help:
+          'Build with a specific configuration without permanently switching.',
+    );
+  }
+
   @override
   void run() async {
+    final configName = argResults?['config'] as String?;
+    String? previousConfig;
+
+    // If --config is specified, temporarily switch
+    if (configName != null) {
+      ConfigsManager().load();
+      final config = ConfigsManager().getConfig(configName);
+      if (config == null) {
+        _ConsoleUI.printError('Configuration "$configName" not found.');
+        return;
+      }
+
+      previousConfig = ConfigsManager().activeConfigName;
+      _ConsoleUI.printInfo('Building with config: $configName');
+      await ConfigsManager().setActiveConfig(configName);
+    }
+
     _ConsoleUI.printHeader('🏗️  Android Build');
 
     /// 1. Validation Checks
@@ -52,13 +78,16 @@ class BuildAndroidCommand extends Command {
       _ConsoleUI.printEmpty();
       _ConsoleUI.printError(
           "Please fix the above issues before building. Run 'publish doctor' for more details.");
+      // Revert if using temp config
+      if (previousConfig != null) {
+        await ConfigsManager().setActiveConfig(previousConfig);
+      }
       return;
     }
 
     /// 2. Execution
     _ConsoleUI.startLoading('Building Android App Bundle...');
 
-    // Slight delay to show loader for UX (optional, but requested)
     await Future.delayed(Duration(seconds: 2));
 
     final result = await Process.run(
@@ -75,6 +104,12 @@ class BuildAndroidCommand extends Command {
       _ConsoleUI.stopLoading(success: false, message: 'Build Failed');
       print(result.stderr);
       print(result.stdout);
+    }
+
+    // Revert to previous config if temp switching
+    if (previousConfig != null && previousConfig != configName) {
+      _ConsoleUI.printInfo('Reverting to previous config: $previousConfig');
+      await ConfigsManager().setActiveConfig(previousConfig);
     }
   }
 }

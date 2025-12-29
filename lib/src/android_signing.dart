@@ -49,6 +49,19 @@ class _AndroidSigning {
       }
     }
 
+    // Ask for version suffix
+    String? versionSuffix;
+    if (_ConsoleUI.promptConfirm(
+        "Do you want to add a version suffix? (e.g. -staging, -beta)")) {
+      versionSuffix = _ConsoleUI.prompt("Enter version suffix");
+    }
+
+    // Ask for splash color
+    String? splashColor;
+    if (_ConsoleUI.promptConfirm("Do you want to set a splash screen color?")) {
+      splashColor = _ConsoleUI.prompt("Enter splash color (hex, e.g. #FF5722)");
+    }
+
     final credentials = await _generateKeystore(keystorePath);
     if (credentials == null) return null;
 
@@ -64,6 +77,8 @@ class _AndroidSigning {
       keyAlias: credentials['alias']!,
       storePassword: credentials['storePass']!,
       keyPassword: credentials['keyPass']!,
+      versionSuffix: versionSuffix,
+      splashColor: splashColor,
     );
   }
 

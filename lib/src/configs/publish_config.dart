@@ -9,6 +9,8 @@ class PublishConfig {
   final String keyAlias;
   final String storePassword;
   final String keyPassword;
+  final String? versionSuffix;
+  final String? splashColor;
 
   PublishConfig({
     required this.name,
@@ -19,6 +21,8 @@ class PublishConfig {
     required this.keyAlias,
     required this.storePassword,
     required this.keyPassword,
+    this.versionSuffix,
+    this.splashColor,
   });
 
   /// Directory where this config stores its Android icons backup
@@ -26,6 +30,9 @@ class PublishConfig {
 
   /// Directory where this config stores its iOS icons backup
   String get iosIconsBackupDir => 'publish_configs/$name/ios_icons';
+
+  /// Directory where this config stores its splash screen backup
+  String get splashBackupDir => 'publish_configs/$name/splash';
 
   /// Directory where this config's files are stored
   String get configDir => 'publish_configs/$name';
@@ -40,6 +47,8 @@ class PublishConfig {
       'key_alias': keyAlias,
       'store_password': storePassword,
       'key_password': keyPassword,
+      'version_suffix': versionSuffix,
+      'splash_color': splashColor,
     };
   }
 
@@ -53,6 +62,8 @@ class PublishConfig {
       keyAlias: json['key_alias'],
       storePassword: json['store_password'],
       keyPassword: json['key_password'],
+      versionSuffix: json['version_suffix'],
+      splashColor: json['splash_color'],
     );
   }
 
@@ -66,6 +77,8 @@ class PublishConfig {
     String? keyAlias,
     String? storePassword,
     String? keyPassword,
+    String? versionSuffix,
+    String? splashColor,
   }) {
     return PublishConfig(
       name: name ?? this.name,
@@ -76,6 +89,8 @@ class PublishConfig {
       keyAlias: keyAlias ?? this.keyAlias,
       storePassword: storePassword ?? this.storePassword,
       keyPassword: keyPassword ?? this.keyPassword,
+      versionSuffix: versionSuffix ?? this.versionSuffix,
+      splashColor: splashColor ?? this.splashColor,
     );
   }
 }
@@ -85,6 +100,10 @@ class ConfigsManager {
   static const String _androidResPath = 'android/app/src/main/res';
   static const String _iosIconsPath =
       'ios/Runner/Assets.xcassets/AppIcon.appiconset';
+  static const String _androidSplashPath =
+      'android/app/src/main/res/drawable/launch_background.xml';
+  static const String _iosSplashPath =
+      'ios/Runner/Base.lproj/LaunchScreen.storyboard';
 
   static final ConfigsManager _instance = ConfigsManager._internal();
 
@@ -159,11 +178,12 @@ class ConfigsManager {
     final config = _configs.firstWhere((c) => c.name == name,
         orElse: () => throw Exception('Config $name not found'));
 
-    // Backup current icons before switching (if there's an active config)
+    // Backup current icons and splash before switching (if there's an active config)
     if (_activeConfigName != null && _activeConfigName != name) {
       final currentConfig = activeConfig;
       if (currentConfig != null) {
         _backupIcons(currentConfig);
+        _backupSplash(currentConfig);
       }
     }
 
@@ -193,8 +213,9 @@ storeFile=${config.keystorePath}
     // 4. Update Main.dart Title
     _updateMainDartTitle(config.appName);
 
-    // 5. Restore icons for this config
+    // 5. Restore icons and splash for this config
     _restoreIcons(config);
+    _restoreSplash(config);
 
     _ConsoleUI.printSuccess('Switched to configuration: $name');
   }
@@ -209,6 +230,24 @@ storeFile=${config.keystorePath}
 
     // Backup iOS icons
     _backupDirectory(_iosIconsPath, config.iosIconsBackupDir);
+  }
+
+  /// Backup splash screen files
+  void _backupSplash(PublishConfig config) {
+    final splashDir = Directory(config.splashBackupDir);
+    if (!splashDir.existsSync()) splashDir.createSync(recursive: true);
+
+    // Backup Android splash
+    final androidSplash = File(_androidSplashPath);
+    if (androidSplash.existsSync()) {
+      androidSplash.copySync('${config.splashBackupDir}/launch_background.xml');
+    }
+
+    // Backup iOS splash
+    final iosSplash = File(_iosSplashPath);
+    if (iosSplash.existsSync()) {
+      iosSplash.copySync('${config.splashBackupDir}/LaunchScreen.storyboard');
+    }
   }
 
   /// Restore icons from the config's backup directory to the project
@@ -228,6 +267,25 @@ storeFile=${config.keystorePath}
     // Restore iOS icons
     if (iosBackup.existsSync()) {
       _restoreDirectory(config.iosIconsBackupDir, _iosIconsPath);
+    }
+  }
+
+  /// Restore splash screen files
+  void _restoreSplash(PublishConfig config) {
+    final androidBackup =
+        File('${config.splashBackupDir}/launch_background.xml');
+    final iosBackup = File('${config.splashBackupDir}/LaunchScreen.storyboard');
+
+    if (androidBackup.existsSync()) {
+      final dest = File(_androidSplashPath);
+      if (!dest.parent.existsSync()) dest.parent.createSync(recursive: true);
+      androidBackup.copySync(_androidSplashPath);
+      _ConsoleUI.printStatus('Splash', 'Restored Android splash screen.');
+    }
+
+    if (iosBackup.existsSync()) {
+      iosBackup.copySync(_iosSplashPath);
+      _ConsoleUI.printStatus('Splash', 'Restored iOS splash screen.');
     }
   }
 
@@ -319,9 +377,10 @@ storeFile=${config.keystorePath}
     }
   }
 
-  /// Backup current icons for a newly created config
+  /// Backup current icons and splash for a newly created config
   void backupIconsForNewConfig(PublishConfig config) {
     _backupIcons(config);
-    _ConsoleUI.printSuccess('Icons backed up for ${config.name}');
+    _backupSplash(config);
+    _ConsoleUI.printSuccess('Icons and splash backed up for ${config.name}');
   }
 }
