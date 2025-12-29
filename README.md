@@ -148,6 +148,14 @@ We welcome contributions!
 
 ---
 
+## Author
+
+<a href="https://mubashar.dev" rel="dofollow">Available as Senior App Developer</a>
+
+Follow on [GitHub](https://github.com/mubashardev) for more open source repos like this.
+
+---
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
