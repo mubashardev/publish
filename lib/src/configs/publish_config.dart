@@ -495,6 +495,12 @@ class ConfigsManager {
     final destPath = '${config.configDir}${Platform.pathSeparator}$fileName';
     final destFile = File(destPath);
 
+    // Safety check: Don't copy if source and dest are the same file
+    if (sourceFile.absolute.path == destFile.absolute.path) {
+      _ConsoleUI.printInfo('Keystore is already in the config directory.');
+      return destFile.absolute.path;
+    }
+
     if (!destFile.parent.existsSync()) {
       destFile.parent.createSync(recursive: true);
     }
