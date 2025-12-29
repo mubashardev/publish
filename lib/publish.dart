@@ -25,6 +25,7 @@ part 'src/validator.dart';
 part 'src/configs/android_configs.dart';
 part 'src/configs/ios_configs.dart';
 part 'src/configs/configs_helper.dart';
+part 'src/configs/publish_config.dart';
 
 part 'src/commands/ignore_command.dart';
 part 'src/commands/version_command.dart';
@@ -41,3 +42,4 @@ part 'src/commands/sign_command.dart';
 part 'src/commands/sign_ios_command.dart';
 part 'src/commands/build_command.dart';
 part 'src/commands/build_android_command.dart';
+part 'src/commands/config_command.dart';

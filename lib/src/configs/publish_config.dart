@@ -1,0 +1,327 @@
+part of '../../publish.dart';
+
+class PublishConfig {
+  final String name;
+  final String appName;
+  final String packageId;
+  final String? iconSourcePath;
+  final String keystorePath;
+  final String keyAlias;
+  final String storePassword;
+  final String keyPassword;
+
+  PublishConfig({
+    required this.name,
+    required this.appName,
+    required this.packageId,
+    this.iconSourcePath,
+    required this.keystorePath,
+    required this.keyAlias,
+    required this.storePassword,
+    required this.keyPassword,
+  });
+
+  /// Directory where this config stores its Android icons backup
+  String get androidIconsBackupDir => 'publish_configs/$name/android_icons';
+
+  /// Directory where this config stores its iOS icons backup
+  String get iosIconsBackupDir => 'publish_configs/$name/ios_icons';
+
+  /// Directory where this config's files are stored
+  String get configDir => 'publish_configs/$name';
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'app_name': appName,
+      'package_id': packageId,
+      'icon_source_path': iconSourcePath,
+      'keystore_path': keystorePath,
+      'key_alias': keyAlias,
+      'store_password': storePassword,
+      'key_password': keyPassword,
+    };
+  }
+
+  factory PublishConfig.fromJson(Map<String, dynamic> json) {
+    return PublishConfig(
+      name: json['name'],
+      appName: json['app_name'],
+      packageId: json['package_id'],
+      iconSourcePath: json['icon_source_path'],
+      keystorePath: json['keystore_path'],
+      keyAlias: json['key_alias'],
+      storePassword: json['store_password'],
+      keyPassword: json['key_password'],
+    );
+  }
+
+  /// Create a copy with updated fields
+  PublishConfig copyWith({
+    String? name,
+    String? appName,
+    String? packageId,
+    String? iconSourcePath,
+    String? keystorePath,
+    String? keyAlias,
+    String? storePassword,
+    String? keyPassword,
+  }) {
+    return PublishConfig(
+      name: name ?? this.name,
+      appName: appName ?? this.appName,
+      packageId: packageId ?? this.packageId,
+      iconSourcePath: iconSourcePath ?? this.iconSourcePath,
+      keystorePath: keystorePath ?? this.keystorePath,
+      keyAlias: keyAlias ?? this.keyAlias,
+      storePassword: storePassword ?? this.storePassword,
+      keyPassword: keyPassword ?? this.keyPassword,
+    );
+  }
+}
+
+class ConfigsManager {
+  static const String _configFileName = 'publish_config.json';
+  static const String _androidResPath = 'android/app/src/main/res';
+  static const String _iosIconsPath =
+      'ios/Runner/Assets.xcassets/AppIcon.appiconset';
+
+  static final ConfigsManager _instance = ConfigsManager._internal();
+
+  factory ConfigsManager() => _instance;
+
+  ConfigsManager._internal();
+
+  List<PublishConfig> _configs = [];
+  String? _activeConfigName;
+
+  List<PublishConfig> get configs => List.unmodifiable(_configs);
+  String? get activeConfigName => _activeConfigName;
+
+  PublishConfig? get activeConfig {
+    if (_activeConfigName == null) return null;
+    try {
+      return _configs.firstWhere((c) => c.name == _activeConfigName);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void load() {
+    final file = File(_configFileName);
+    if (!file.existsSync()) {
+      return;
+    }
+
+    try {
+      final jsonString = file.readAsStringSync();
+      final Map<String, dynamic> data = json.decode(jsonString);
+
+      if (data.containsKey('active_config')) {
+        _activeConfigName = data['active_config'];
+      }
+
+      if (data.containsKey('configs') && data['configs'] is List) {
+        _configs = (data['configs'] as List)
+            .map((e) => PublishConfig.fromJson(e))
+            .toList();
+      }
+    } catch (e) {
+      _ConsoleUI.printError('Failed to load configs: $e');
+    }
+  }
+
+  void save() {
+    final file = File(_configFileName);
+    final data = {
+      'active_config': _activeConfigName,
+      'configs': _configs.map((e) => e.toJson()).toList(),
+    };
+    file.writeAsStringSync(const JsonEncoder.withIndent('  ').convert(data));
+  }
+
+  void addConfig(PublishConfig config) {
+    // Remove existing config with same name if exists
+    _configs.removeWhere((c) => c.name == config.name);
+    _configs.add(config);
+    save();
+  }
+
+  void removeConfig(String name) {
+    _configs.removeWhere((c) => c.name == name);
+    if (_activeConfigName == name) {
+      _activeConfigName = null;
+    }
+    save();
+  }
+
+  Future<void> setActiveConfig(String name) async {
+    final config = _configs.firstWhere((c) => c.name == name,
+        orElse: () => throw Exception('Config $name not found'));
+
+    // Backup current icons before switching (if there's an active config)
+    if (_activeConfigName != null && _activeConfigName != name) {
+      final currentConfig = activeConfig;
+      if (currentConfig != null) {
+        _backupIcons(currentConfig);
+      }
+    }
+
+    _activeConfigName = name;
+    save();
+
+    // Switch logic
+    _ConsoleUI.printStatus('Config', 'Switching to $name...');
+
+    // 1. Update Key Properties
+    final keyPropsPath = 'android/key.properties';
+    _Commons.writeStringToFile(
+        keyPropsPath, """storePassword=${config.storePassword}
+keyPassword=${config.keyPassword}
+keyAlias=${config.keyAlias}
+storeFile=${config.keystorePath}
+""");
+
+    // 2. Update IDs
+    ConfigsHelper.updateId(config.packageId, 'android');
+    ConfigsHelper.updateId(config.packageId, 'ios');
+
+    // 3. Update Name
+    ConfigsHelper.updateName(config.appName, 'android');
+    ConfigsHelper.updateName(config.appName, 'ios');
+
+    // 4. Update Main.dart Title
+    _updateMainDartTitle(config.appName);
+
+    // 5. Restore icons for this config
+    _restoreIcons(config);
+
+    _ConsoleUI.printSuccess('Switched to configuration: $name');
+  }
+
+  /// Backup current project icons to the config's backup directory
+  void _backupIcons(PublishConfig config) {
+    _ConsoleUI.printStatus('Icons', 'Backing up current icons...');
+
+    // Backup Android icons
+    _backupDirectory(_androidResPath, config.androidIconsBackupDir,
+        filter: (name) => name.startsWith('mipmap-'));
+
+    // Backup iOS icons
+    _backupDirectory(_iosIconsPath, config.iosIconsBackupDir);
+  }
+
+  /// Restore icons from the config's backup directory to the project
+  void _restoreIcons(PublishConfig config) {
+    final androidBackup = Directory(config.androidIconsBackupDir);
+    final iosBackup = Directory(config.iosIconsBackupDir);
+
+    if (androidBackup.existsSync() || iosBackup.existsSync()) {
+      _ConsoleUI.printStatus('Icons', 'Restoring icons for ${config.name}...');
+    }
+
+    // Restore Android icons
+    if (androidBackup.existsSync()) {
+      _restoreDirectory(config.androidIconsBackupDir, _androidResPath);
+    }
+
+    // Restore iOS icons
+    if (iosBackup.existsSync()) {
+      _restoreDirectory(config.iosIconsBackupDir, _iosIconsPath);
+    }
+  }
+
+  /// Backup a directory's contents to a destination
+  void _backupDirectory(String source, String destination,
+      {bool Function(String)? filter}) {
+    final sourceDir = Directory(source);
+    if (!sourceDir.existsSync()) return;
+
+    final destDir = Directory(destination);
+    if (!destDir.existsSync()) destDir.createSync(recursive: true);
+
+    for (var entity in sourceDir.listSync()) {
+      final name = entity.uri.pathSegments.last;
+
+      if (filter != null && !filter(name)) continue;
+
+      if (entity is Directory) {
+        _copyDirectory(entity.path, '${destDir.path}/$name');
+      } else if (entity is File) {
+        entity.copySync('${destDir.path}/$name');
+      }
+    }
+  }
+
+  /// Restore a directory's contents to a destination
+  void _restoreDirectory(String source, String destination) {
+    final sourceDir = Directory(source);
+    if (!sourceDir.existsSync()) return;
+
+    for (var entity in sourceDir.listSync()) {
+      final name = entity.uri.pathSegments.last;
+
+      if (entity is Directory) {
+        _copyDirectory(entity.path, '$destination/$name');
+      } else if (entity is File) {
+        final destFile = File('$destination/$name');
+        if (!destFile.parent.existsSync()) {
+          destFile.parent.createSync(recursive: true);
+        }
+        entity.copySync(destFile.path);
+      }
+    }
+  }
+
+  /// Copy a directory recursively
+  void _copyDirectory(String source, String destination) {
+    final sourceDir = Directory(source);
+    final destDir = Directory(destination);
+
+    if (!destDir.existsSync()) destDir.createSync(recursive: true);
+
+    for (var entity in sourceDir.listSync()) {
+      final name = entity.uri.pathSegments.last;
+      if (entity is Directory) {
+        _copyDirectory(entity.path, '${destDir.path}/$name');
+      } else if (entity is File) {
+        entity.copySync('${destDir.path}/$name');
+      }
+    }
+  }
+
+  void _updateMainDartTitle(String newTitle) {
+    final mainFile = File('lib/main.dart');
+    if (mainFile.existsSync()) {
+      var content = mainFile.readAsStringSync();
+      final regex = RegExp(r"title:\s*(['\x22])(.*?)\1");
+
+      if (regex.hasMatch(content)) {
+        content = content.replaceAllMapped(regex, (match) {
+          final quote = match.group(1);
+          return 'title: $quote$newTitle$quote';
+        });
+
+        mainFile.writeAsStringSync(content);
+        _ConsoleUI.printStatus(
+            'Config', 'Updated main.dart title to "$newTitle"');
+      }
+    }
+  }
+
+  bool get hasConfigs => _configs.isNotEmpty;
+
+  PublishConfig? getConfig(String name) {
+    try {
+      return _configs.firstWhere((c) => c.name == name);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Backup current icons for a newly created config
+  void backupIconsForNewConfig(PublishConfig config) {
+    _backupIcons(config);
+    _ConsoleUI.printSuccess('Icons backed up for ${config.name}');
+  }
+}

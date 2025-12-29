@@ -30,7 +30,8 @@ void main(List<String> arguments) async {
     ..addCommand(VersionCommand())
     ..addCommand(ChangelogCommand())
     ..addCommand(UpdateCommand())
-    ..addCommand(IgnoreCommand());
+    ..addCommand(IgnoreCommand())
+    ..addCommand(ConfigCommand());
 
   // Parse arguments to check for global flags
   final argResults = runner.argParser.parse(arguments);

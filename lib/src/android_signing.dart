@@ -2,27 +2,69 @@ part of '../publish.dart';
 
 /// Helper to handle Android signing configuration
 class _AndroidSigning {
-  static String? alias;
-  static String keystorePath = "keys/keystore.jks";
-  static String? keyPass;
-  static String? keystorePass;
-  static const String keyPropertiesPath = "./android/key.properties";
-
-  static Future<bool> sign() async {
+  static Future<PublishConfig?> sign({String? configName}) async {
     _ConsoleUI.printHeader('🔐 Android Signing Setup',
-        subtitle: 'Keystore Generator');
+        subtitle:
+            configName != null ? 'Config: $configName' : 'Keystore Generator');
+
+    String? name = configName;
+    if (name == null) {
+      name = _ConsoleUI.prompt("Enter configuration name (e.g. prod, staging)",
+          required: true);
+      if (name == null) return null;
+    }
+
+    // Determine paths
+    final configDir = Directory('publish_configs/$name');
+    if (!configDir.existsSync()) configDir.createSync(recursive: true);
+    final keystorePath = "${configDir.path}/keystore.jks";
 
     var appId = _AndroidConfigs.appId;
     final newId = await _askToChangeId(appId);
     if (newId != null) {
-      _setAppId(newId);
+      appId = newId;
     }
 
-    if (!_generateKeystore()) return false;
-    _createKeyProperties();
+    // Check App Name
+    var appName = _AndroidConfigs.appName;
+    if (_ConsoleUI.promptConfirm("Do you want to change the App Name?")) {
+      final newName = _ConsoleUI.prompt("Enter new App Name", required: true);
+      if (newName != null) appName = newName;
+    }
+
+    // Ask for icon
+    String? iconSourcePath;
+    if (_ConsoleUI.promptConfirm(
+        "Do you want to set an icon for this configuration?")) {
+      iconSourcePath = _ConsoleUI.prompt(
+          "Enter path to icon source image (1024x1024 png recommended)",
+          required: true);
+      if (iconSourcePath != null && File(iconSourcePath).existsSync()) {
+        _ConsoleUI.printInfo('Icons will be generated and backed up...');
+        await IconsCommand.generate(File(iconSourcePath));
+      } else if (iconSourcePath != null) {
+        _ConsoleUI.printWarning(
+            'Icon file not found at $iconSourcePath. Skipping icon generation.');
+        iconSourcePath = null;
+      }
+    }
+
+    final credentials = await _generateKeystore(keystorePath);
+    if (credentials == null) return null;
+
+    // Ensure build.gradle is configured
     _configureBuildConfig();
 
-    return true;
+    return PublishConfig(
+      name: name,
+      appName: appName,
+      packageId: appId,
+      iconSourcePath: iconSourcePath,
+      keystorePath: keystorePath,
+      keyAlias: credentials['alias']!,
+      storePassword: credentials['storePass']!,
+      keyPassword: credentials['keyPass']!,
+    );
   }
 
   static Future<String?> _askToChangeId(String oldId) async {
@@ -33,8 +75,9 @@ class _AndroidSigning {
     return null;
   }
 
-  static bool _generateKeystore() {
-    alias = _ConsoleUI.prompt("Enter key alias");
+  static Future<Map<String, String>?> _generateKeystore(
+      String keystorePath) async {
+    final alias = _ConsoleUI.prompt("Enter key alias");
     final cn =
         _ConsoleUI.prompt("Publisher's Common Name (e.g. Mubashar Dev)") ??
             'Mubashar Dev';
@@ -53,33 +96,39 @@ class _AndroidSigning {
 
     final dname = "CN=$cn, OU=$ou, O=$org, L=$locality, S=$state, C=$country";
 
-    keyPass = _ConsoleUI.prompt("Key password", required: true);
-    keystorePass = _ConsoleUI.prompt("Keystore password", required: true);
+    final keyPass = _ConsoleUI.prompt("Key password", required: true);
+    final keystorePass = _ConsoleUI.prompt("Keystore password", required: true);
 
     if (alias == null ||
-        alias!.isEmpty ||
+        alias.isEmpty ||
         keyPass == null ||
         keystorePass == null) {
       _ConsoleUI.printError("Key Alias and Passwords are required.");
-      return false;
+      return null;
     }
 
-    final keysDir = Directory("keys");
-    if (!keysDir.existsSync()) keysDir.createSync();
+    // Check if keystore exists
+    if (File(keystorePath).existsSync()) {
+      if (!_ConsoleUI.promptConfirm(
+          "Keystore already exists at $keystorePath. Overwrite?")) {
+        return null;
+      }
+      File(keystorePath).deleteSync();
+    }
 
     final res = Process.runSync("keytool", [
       "-genkey",
       "-noprompt",
       "-alias",
-      alias!,
+      alias,
       "-dname",
       dname,
       "-keystore",
       keystorePath,
       "-storepass",
-      keystorePass!,
+      keystorePass,
       "-keypass",
-      keyPass!,
+      keyPass,
       "-keyalg",
       "RSA",
       "-keysize",
@@ -90,20 +139,15 @@ class _AndroidSigning {
 
     if (res.exitCode != 0) {
       _ConsoleUI.printError("Keytool failed: ${res.stderr}");
-      return false;
+      return null;
     }
 
     _ConsoleUI.printSuccess("Generated keystore at $keystorePath");
-    return true;
-  }
-
-  static void _createKeyProperties() {
-    _Commons.writeStringToFile(keyPropertiesPath, """storePassword=$keystorePass
-keyPassword=$keyPass
-keyAlias=$alias
-storeFile=../../$keystorePath
-""");
-    _ConsoleUI.printSuccess("Created $keyPropertiesPath");
+    return {
+      'alias': alias,
+      'keyPass': keyPass,
+      'storePass': keystorePass,
+    };
   }
 
   static void _configureBuildConfig() {
@@ -200,11 +244,5 @@ storeFile=../../$keystorePath
       }
     }).toList();
     return buildfile.join("\n");
-  }
-
-  static void _setAppId(String appId) {
-    String bfString = _Commons.getFileAsString(_Commons.appBuildPath);
-    String updated = _GradleParser.replaceApplicationId(bfString, appId);
-    _Commons.writeStringToFile(_Commons.appBuildPath, updated);
   }
 }
