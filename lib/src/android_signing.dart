@@ -110,40 +110,145 @@ class _AndroidSigning {
       'storeFile': 'storeFile',
     };
 
-    // Try to detect properties file path
-    // Matches: rootProject.file('key.properties') or file("key.properties")
-    final fileRegex =
-        RegExp(r"(?:rootProject\.)?file\s*\(['\x22](.*?)['\x22]\)");
-    final fileMatch = fileRegex.firstMatch(buildContent);
-    if (fileMatch != null) {
-      // Check if this file is likely the properties file (contains 'key' or 'prop')
-      final path = fileMatch.group(1);
-      if (path != null && (path.contains("key") || path.contains("prop"))) {
-        propertiesPath = 'android/$path';
-        _ConsoleUI.printStatus(
-            'Legacy', 'Detected keystore properties file: $propertiesPath');
+    // --- Smart Detection Logic ---
+
+    // 1. Find the property object name used in signingConfigs.release
+    // Matches: release { ... keyAlias propObject['key'] ... }
+    // Handles various formats like: keyAlias = propObject['key'] or keyAlias propObject['key']
+
+    // We try to find the block first. This is a simplified block extractor.
+    // It assumes 'signingConfigs' and 'release' are relatively standard.
+    // If complex nesting exists, it might need more robustness, but for Flutter standard it works.
+    final signingBlockRegex =
+        RegExp(r"signingConfigs\s*\{[\s\S]*?\}"); // Basic block finding
+    final signingMatch = signingBlockRegex.firstMatch(buildContent);
+
+    String? propObjectName;
+
+    if (signingMatch != null) {
+      final signingBlock = signingMatch.group(0)!;
+      // Find release block inside
+      final releaseBlockRegex = RegExp(r"release\s*\{([\s\S]*?)\}");
+      final releaseMatch = releaseBlockRegex.firstMatch(signingBlock);
+
+      if (releaseMatch != null) {
+        final releaseContent = releaseMatch.group(1)!;
+
+        // Helper to extract var name and key
+        // Pattern: fieldName [=] varName['keyName'] OR varName.getProperty('keyName')
+        void checkField(String fieldName, String defaultKey) {
+          // Pattern A: keyAlias =? var['key']
+          final regexA = RegExp(
+              fieldName + r"\s*=?\s*([\w\.]+)\s*\[\s*['\x22](.*?)['\x22]\s*\]");
+          // Pattern B: keyAlias =? var.getProperty('key')
+          final regexB = RegExp(fieldName +
+              r"\s*=?\s*([\w\.]+)\.getProperty\(\s*['\x22](.*?)['\x22]\s*\)");
+
+          var match = regexA.firstMatch(releaseContent);
+          if (match == null) match = regexB.firstMatch(releaseContent);
+
+          if (match != null) {
+            propObjectName = match.group(1); // e.g. keystoreProperties
+            propertyKeys[defaultKey] = match.group(2)!; // e.g. alias
+          }
+        }
+
+        checkField('keyAlias', 'keyAlias');
+        checkField('keyPassword', 'keyPassword');
+        checkField('storePassword', 'storePassword');
+
+        // Store File is special: storeFile file(var['key'])
+        // Support: file(...), rootProject.file(...), or just var['key'] (rare but possible if var is File)
+        final storeFileRegex = RegExp(
+            r"storeFile\s*=?\s*(?:rootProject\.)?file\s*\(\s*([\w\.]+)\s*\[\s*['\x22](.*?)['\x22]\s*\]\s*\)");
+        final storeFileMatch = storeFileRegex.firstMatch(releaseContent);
+        if (storeFileMatch != null) {
+          propObjectName = storeFileMatch.group(1);
+          propertyKeys['storeFile'] = storeFileMatch.group(2)!;
+        }
       }
     }
 
-    // Try to detect keys
-    // Look for: storePassword = props['STORE_PASS'] or props["STORE_PASS"]
-    // We search for the standard android signing fields
-    final fields = ['storePassword', 'keyPassword', 'keyAlias', 'storeFile'];
-    bool keysFound = false;
-
-    for (var field in fields) {
-      // Matches: field = props['KEY'] or field props['KEY']
-      final keyRegex = RegExp(field + r"\s*=?\s*\w+\[['\x22](.*?)['\x22]\]");
-      final keyMatch = keyRegex.firstMatch(buildContent);
-      if (keyMatch != null) {
-        propertyKeys[field] = keyMatch.group(1)!;
-        keysFound = true;
-      }
-    }
-
-    if (keysFound) {
+    // 2. Trace the file definition for propObjectName
+    if (propObjectName != null) {
       _ConsoleUI.printStatus(
-          'Legacy', 'Detected custom property keys in build.gradle');
+          'Legacy', 'Tracing configuration for variable: $propObjectName');
+
+      // Look for: def propObjectFile = rootProject.file('path')
+      // OR: val propObjectFile = rootProject.file("path") (Kotlin)
+      // Heuristic: Usually the file variable is named propObjectName + "File" (e.g. keystorePropertiesFile)
+      // But we search for any variable assigned a file() that is then loaded into propObjectName.
+
+      // Strategy A: Find where propObjectName is loaded.
+      // propObjectName.load( ... fileVar ...)
+      // This is hard to parse dynamically.
+
+      // Strategy B: Look for the specific file assignment pattern usually associated with this object.
+      // Matches: def var = rootProject.file('path')
+      // And we hope 'var' is related.
+
+      // Better Strategy: Look for the SPECIFIC pattern:
+      // def <var> = rootProject.file('<path>') followed eventually by <propObjectName>.load
+      // This is robust enough for standard Gradle files.
+
+      // Let's try to find the file path directly associated with the File object creation that might be named similar to propObjectName.
+      // E.g. propertiesFile = ...
+
+      // Or simply iterate all file definitions and see which one ends in .properties and isn't local.properties (unless local.properties is the one used).
+
+      // Use the User's hint: The variable name usually guides us.
+      // Regex: def/val <any> = (rootProject.)?file(['"]<path>['"])
+      // And strict check: if <any> starts with propObjectName, it's a strong match.
+
+      final fileDefRegex = RegExp(
+          r"(?:def|val)\s+(\w+)\s*=\s*(?:rootProject\.)?file\s*\(['\x22](.*?)['\x22]\)");
+      final matches = fileDefRegex.allMatches(buildContent);
+
+      String? bestPathCandidate;
+
+      for (var m in matches) {
+        final varName = m.group(1)!;
+        final path = m.group(2)!;
+
+        // If variable name contains our object name (e.g. keystorePropertiesFile contains keystoreProperties)
+        if (varName.toLowerCase().contains(propObjectName!.toLowerCase())) {
+          bestPathCandidate = path;
+          break;
+        }
+      }
+
+      if (bestPathCandidate != null) {
+        propertiesPath = 'android/$bestPathCandidate';
+        _ConsoleUI.printStatus(
+            'Legacy', 'Resolved properties file: $propertiesPath');
+      } else {
+        _ConsoleUI.printWarning(
+            'Could not trace exact file for $propObjectName. defaulting to android/key.properties');
+        // Fallback: Try finding ANY file that isn't local.properties
+        for (var m in matches) {
+          final path = m.group(2)!;
+          if (path.contains("key") && !path.contains("local.properties")) {
+            propertiesPath = 'android/$path';
+            break;
+          }
+        }
+      }
+    } else {
+      _ConsoleUI.printStatus('Legacy',
+          'Could not parse signingConfigs. Using default heuristics.');
+      // Fallback to old heuristic (find any file('key.properties')) is implicitly handled by defaults if not found logic below
+      // But let's keep the old simple check just in case.
+      final simpleFileRegex =
+          RegExp(r"(?:rootProject\.)?file\s*\(['\x22](.*?)['\x22]\)");
+      final simpleMatch = simpleFileRegex.firstMatch(buildContent);
+      if (simpleMatch != null) {
+        final path = simpleMatch.group(1);
+        if (path != null &&
+            (path.contains("key") || path.contains("prop")) &&
+            !path.contains("local")) {
+          propertiesPath = 'android/$path';
+        }
+      }
     }
 
     // 2. Read the properties file
