@@ -1,3 +1,13 @@
+## [1.2.6] - 2025-12-29
+### ✨ Features
+- **Smart Legacy Migration**: Now strictly checks `build.gradle` to identify the exact custom `key.properties` file and variable names used (`keyAlias`, `storeFile`, etc.) when migrating legacy setups, ensuring your existing build configuration remains untouched.
+- **Improved Sign UX**: Better prompts for saving legacy configurations and clearer visual feedback when creating or overwriting profiles.
+- **Version Preservation**: Each configuration profile now remembers its own app version (from `pubspec.yaml`), automatically restoring it when you switch profiles. Perfect for managing different versions for dev/staging/prod.
+- **Dynamic Property Preservation**: Any extra properties in your `key.properties` file (e.g. API keys) are now preserved and restored safely.
+
+### 🔧 Improvements
+- **Robust Parsing**: `publish config` now better handles custom Gradle configurations during migration.
+
 ## [1.2.5] - 2025-12-29
 ### ✨ Features
 - **Multi-Config System**: Manage multiple app profiles (dev, staging, prod) with unique settings.

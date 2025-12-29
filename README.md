@@ -63,6 +63,13 @@ You can now use the `publish` command anywhere in your terminal.
 - **App Icons** (Android & iOS)
 - **Splash Screen**
 - **Version Suffix** (e.g., `-beta`)
+- **App Version** (preserves `pubspec.yaml` version)
+
+### 🛡 This is "Data Preservation"
+When you create profiles or build legacy setups, `publish` ensures complete data safety:
+1.  **Version Preservation**: Switching profiles automatically updates the `version` in `pubspec.yaml` to match that profile's last state.
+2.  **Asset Preservation**: Your `android` and `ios` icons and splash screens are backed up per-profile. Switching restores them instantly.
+3.  **Legacy Intelligence**: If you have a custom properties file (e.g., `android/secrets.props`) with extra variables (like `API_KEY`), `publish` detects and preserves them alongside your signing keys. Nothing is lost!
 
 ### Managing Configs
 
@@ -104,7 +111,7 @@ This temporary applies the `staging` profile (icons, ids, signing), builds the a
 | Command | Description |
 |---------|-------------|
 | `build android` | Validates configuration and builds Android App Bundle (`.aab`). Supports `--config`. |
-| `sign android` | Wizard to create a new configuration with keystore, icons, and signing setup. |
+| `sign android` | Interactive wizard to setup signing. **Supports migrating existing keys!** |
 
 ### Assets
 

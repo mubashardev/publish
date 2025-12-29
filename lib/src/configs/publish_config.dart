@@ -11,6 +11,10 @@ class PublishConfig {
   final String keyPassword;
   final String? versionSuffix;
   final String? splashColor;
+  final String? propertiesFilePath;
+  final Map<String, String>? propertyKeys;
+  final Map<String, String>? extraProperties;
+  final String? appVersion;
 
   PublishConfig({
     required this.name,
@@ -23,6 +27,10 @@ class PublishConfig {
     required this.keyPassword,
     this.versionSuffix,
     this.splashColor,
+    this.propertiesFilePath,
+    this.propertyKeys,
+    this.extraProperties,
+    this.appVersion,
   });
 
   /// Directory where this config stores its Android icons backup
@@ -49,6 +57,10 @@ class PublishConfig {
       'key_password': keyPassword,
       'version_suffix': versionSuffix,
       'splash_color': splashColor,
+      'properties_file_path': propertiesFilePath,
+      'property_keys': propertyKeys,
+      'extra_properties': extraProperties,
+      'app_version': appVersion,
     };
   }
 
@@ -64,6 +76,12 @@ class PublishConfig {
       keyPassword: json['key_password'],
       versionSuffix: json['version_suffix'],
       splashColor: json['splash_color'],
+      propertiesFilePath: json['properties_file_path'],
+      propertyKeys: (json['property_keys'] as Map<String, dynamic>?)
+          ?.map((k, v) => MapEntry(k, v.toString())),
+      extraProperties: (json['extra_properties'] as Map<String, dynamic>?)
+          ?.map((k, v) => MapEntry(k, v.toString())),
+      appVersion: json['app_version'],
     );
   }
 
@@ -79,6 +97,10 @@ class PublishConfig {
     String? keyPassword,
     String? versionSuffix,
     String? splashColor,
+    String? propertiesFilePath,
+    Map<String, String>? propertyKeys,
+    Map<String, String>? extraProperties,
+    String? appVersion,
   }) {
     return PublishConfig(
       name: name ?? this.name,
@@ -91,6 +113,10 @@ class PublishConfig {
       keyPassword: keyPassword ?? this.keyPassword,
       versionSuffix: versionSuffix ?? this.versionSuffix,
       splashColor: splashColor ?? this.splashColor,
+      propertiesFilePath: propertiesFilePath ?? this.propertiesFilePath,
+      propertyKeys: propertyKeys ?? this.propertyKeys,
+      extraProperties: extraProperties ?? this.extraProperties,
+      appVersion: appVersion ?? this.appVersion,
     );
   }
 }
@@ -194,13 +220,30 @@ class ConfigsManager {
     _ConsoleUI.printStatus('Config', 'Switching to $name...');
 
     // 1. Update Key Properties
-    final keyPropsPath = 'android/key.properties';
-    _Commons.writeStringToFile(
-        keyPropsPath, """storePassword=${config.storePassword}
-keyPassword=${config.keyPassword}
-keyAlias=${config.keyAlias}
-storeFile=${config.keystorePath}
-""");
+    final keyPropsPath = config.propertiesFilePath ?? 'android/key.properties';
+
+    // Use custom keys if available, otherwise default to standard keys
+    final keys = config.propertyKeys ??
+        {
+          'storePassword': 'storePassword',
+          'keyPassword': 'keyPassword',
+          'keyAlias': 'keyAlias',
+          'storeFile': 'storeFile',
+        };
+
+    final buffer = StringBuffer();
+    // Write standard properties
+    buffer.writeln('${keys['storePassword']}=${config.storePassword}');
+    buffer.writeln('${keys['keyPassword']}=${config.keyPassword}');
+    buffer.writeln('${keys['keyAlias']}=${config.keyAlias}');
+    buffer.writeln('${keys['storeFile']}=${config.keystorePath}');
+
+    // Write extra properties
+    config.extraProperties?.forEach((key, value) {
+      buffer.writeln('$key=$value');
+    });
+
+    _Commons.writeStringToFile(keyPropsPath, buffer.toString());
 
     // 2. Update IDs
     ConfigsHelper.updateId(config.packageId, 'android');
@@ -213,11 +256,34 @@ storeFile=${config.keystorePath}
     // 4. Update Main.dart Title
     _updateMainDartTitle(config.appName);
 
-    // 5. Restore icons and splash for this config
+    // 5. Update Pubspec Version
+    if (config.appVersion != null) {
+      _updatePubspecVersion(config.appVersion!);
+    }
+
+    // 6. Restore icons and splash for this config
     _restoreIcons(config);
     _restoreSplash(config);
 
     _ConsoleUI.printSuccess('Switched to configuration: $name');
+    _ConsoleUI.printInfo(
+        'Note: You can switch to any config anytime using: publish config switch <name>');
+  }
+
+  void _updatePubspecVersion(String newVersion) {
+    final pubspecFile = File('pubspec.yaml');
+    if (pubspecFile.existsSync()) {
+      final lines = pubspecFile.readAsLinesSync();
+      final newLines = lines.map((line) {
+        if (line.trim().startsWith('version:')) {
+          return 'version: $newVersion';
+        }
+        return line;
+      }).toList();
+      pubspecFile.writeAsStringSync(newLines.join('\n') + '\n');
+      _ConsoleUI.printStatus(
+          'Config', 'Updated pubspec.yaml version to $newVersion');
+    }
   }
 
   /// Backup current project icons to the config's backup directory

@@ -68,6 +68,18 @@ class _AndroidSigning {
     // Ensure build.gradle is configured
     _configureBuildConfig();
 
+    // Read current version
+    String? appVersion;
+    final pubspecFile = File('pubspec.yaml');
+    if (pubspecFile.existsSync()) {
+      for (var line in pubspecFile.readAsLinesSync()) {
+        if (line.trim().startsWith('version:')) {
+          appVersion = line.split(':')[1].trim();
+          break;
+        }
+      }
+    }
+
     return PublishConfig(
       name: name,
       appName: appName,
@@ -79,6 +91,139 @@ class _AndroidSigning {
       keyPassword: credentials['keyPass']!,
       versionSuffix: versionSuffix,
       splashColor: splashColor,
+      appVersion: appVersion,
+    );
+  }
+
+  static Future<PublishConfig?> createConfigFromCurrent(String name) async {
+    // 1. Parse build.gradle to find property file path and keys
+    final buildFile = File(_Commons.appBuildPath);
+    if (!buildFile.existsSync()) return null;
+    final buildContent = buildFile.readAsStringSync();
+
+    // Default values
+    String propertiesPath = 'android/key.properties';
+    Map<String, String> propertyKeys = {
+      'storePassword': 'storePassword',
+      'keyPassword': 'keyPassword',
+      'keyAlias': 'keyAlias',
+      'storeFile': 'storeFile',
+    };
+
+    // Try to detect properties file path
+    // Matches: rootProject.file('key.properties') or file("key.properties")
+    final fileRegex =
+        RegExp(r"(?:rootProject\.)?file\s*\(['\x22](.*?)['\x22]\)");
+    final fileMatch = fileRegex.firstMatch(buildContent);
+    if (fileMatch != null) {
+      // Check if this file is likely the properties file (contains 'key' or 'prop')
+      final path = fileMatch.group(1);
+      if (path != null && (path.contains("key") || path.contains("prop"))) {
+        propertiesPath = 'android/$path';
+        _ConsoleUI.printStatus(
+            'Legacy', 'Detected keystore properties file: $propertiesPath');
+      }
+    }
+
+    // Try to detect keys
+    // Look for: storePassword = props['STORE_PASS'] or props["STORE_PASS"]
+    // We search for the standard android signing fields
+    final fields = ['storePassword', 'keyPassword', 'keyAlias', 'storeFile'];
+    bool keysFound = false;
+
+    for (var field in fields) {
+      // Matches: field = props['KEY'] or field props['KEY']
+      final keyRegex = RegExp(field + r"\s*=?\s*\w+\[['\x22](.*?)['\x22]\]");
+      final keyMatch = keyRegex.firstMatch(buildContent);
+      if (keyMatch != null) {
+        propertyKeys[field] = keyMatch.group(1)!;
+        keysFound = true;
+      }
+    }
+
+    if (keysFound) {
+      _ConsoleUI.printStatus(
+          'Legacy', 'Detected custom property keys in build.gradle');
+    }
+
+    // 2. Read the properties file
+    final keyPropsFile = File(propertiesPath);
+    if (!keyPropsFile.existsSync()) {
+      _ConsoleUI.printError(
+          'Could not find properties file at $propertiesPath');
+      return null;
+    }
+
+    final props = <String, String>{};
+    for (var line in keyPropsFile.readAsLinesSync()) {
+      if (line.trim().isEmpty || line.trim().startsWith('#')) continue;
+      final parts = line.split('=');
+      if (parts.length >= 2) {
+        props[parts[0].trim()] = parts.sublist(1).join('=').trim();
+      }
+    }
+
+    // Validate we have the values for our mapped keys
+    if (!props.containsKey(propertyKeys['storePassword']) ||
+        !props.containsKey(propertyKeys['keyPassword']) ||
+        !props.containsKey(propertyKeys['keyAlias']) ||
+        !props.containsKey(propertyKeys['storeFile'])) {
+      _ConsoleUI.printError('Properties file missing required keys.');
+      _ConsoleUI.printInfo('Expected keys: ${propertyKeys.values.join(", ")}');
+      return null;
+    }
+
+    // Separate known keys from extra properties
+    final extraProps = <String, String>{};
+    final knownKeys = propertyKeys.values.toSet();
+
+    props.forEach((key, value) {
+      if (!knownKeys.contains(key)) {
+        extraProps[key] = value;
+      }
+    });
+
+    if (extraProps.isNotEmpty) {
+      _ConsoleUI.printStatus(
+          'Legacy', 'Preserving ${extraProps.length} extra properties.');
+    }
+
+    // 3. Read App Name & ID
+    final appName = _AndroidConfigs.appName;
+    final appId = _AndroidConfigs.appId;
+
+    // Read App Version
+    String? appVersion;
+    final pubspecFile = File('pubspec.yaml');
+    if (pubspecFile.existsSync()) {
+      for (var line in pubspecFile.readAsLinesSync()) {
+        if (line.trim().startsWith('version:')) {
+          appVersion = line.split(':')[1].trim();
+          break;
+        }
+      }
+    }
+
+    // 4. Prompt for extras (optional)
+    String? versionSuffix;
+    if (_ConsoleUI.promptConfirm(
+        "Does this setup use a version suffix? (e.g. -beta)")) {
+      versionSuffix = _ConsoleUI.prompt("Enter suffix");
+    }
+
+    return PublishConfig(
+      name: name,
+      appName: appName,
+      packageId: appId,
+      keystorePath: props[propertyKeys['storeFile']]!,
+      keyAlias: props[propertyKeys['keyAlias']]!,
+      storePassword: props[propertyKeys['storePassword']]!,
+      keyPassword: props[propertyKeys['keyPassword']]!,
+      versionSuffix: versionSuffix,
+      propertiesFilePath: propertiesPath,
+      propertyKeys: propertyKeys,
+      extraProperties: extraProps,
+      appVersion: appVersion,
     );
   }
 
