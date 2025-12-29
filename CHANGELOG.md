@@ -1,7 +1,16 @@
 ## [1.2.5] - 2025-12-29
-No user-facing changes.
+### ✨ Features
+- **Multi-Config System**: Manage multiple app profiles (dev, staging, prod) with unique settings.
+- **Asset Preservation**: Android/iOS icons and splash screens are now backed up and restored automatically when switching configurations.
+- **New Commands**: 
+  - `publish config`: Full suite for managing configs (`list`, `switch`, `delete`, `rename`, `edit`, `export`, `import`).
+  - `publish set`: Quickly update app name or ID (renamed from old `config` command).
+- **Build Integration**: Added `--config` flag to `build android` to temporarily build with a specific profile.
+- **Enhanced Configuration**: Support for `versionSuffix` (e.g., -beta) and `splashColor` in profiles.
 
-## [1.2.4] - 2025-12-25
+### 🔧 Improvements
+- Renamed `write config` command to `set` to avoid conflicts.
+- significantly improved documentation and README.## [1.2.4] - 2025-12-25
 ### 🐛 Bug Fixes
 - Update suggested command after successful Android signing.
 
