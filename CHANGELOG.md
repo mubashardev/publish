@@ -1,4 +1,4 @@
-## [1.2.7] - 2025-12-29
+## [1.2.8] - 2025-12-29
 ### ✨ Features
 - **Smart Legacy Migration**: Now strictly checks `build.gradle` to identify the exact custom `key.properties` file and variable names used (`keyAlias`, `storeFile`, etc.) when migrating legacy setups, ensuring your existing build configuration remains untouched.
 - **Improved Sign UX**: Better prompts for saving legacy configurations and clearer visual feedback when creating or overwriting profiles.

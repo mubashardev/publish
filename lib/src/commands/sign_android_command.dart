@@ -38,7 +38,11 @@ class SignAndroidCommand extends Command {
           final legacyConfig =
               await _AndroidSigning.createConfigFromCurrent(legacyName);
           if (legacyConfig != null) {
-            ConfigsManager().backupIconsForNewConfig(legacyConfig);
+            if (_ConsoleUI.promptConfirm(
+                'Do you want to backup current icons and splash screen for this configuration?',
+                defaultYes: true)) {
+              ConfigsManager().backupIconsForNewConfig(legacyConfig);
+            }
             ConfigsManager().addConfig(legacyConfig);
             await ConfigsManager().setActiveConfig(
                 legacyConfig.name); // This will just confirm it as active
@@ -86,7 +90,11 @@ class SignAndroidCommand extends Command {
 
       if (config != null) {
         // Backup current icons for this new config
-        ConfigsManager().backupIconsForNewConfig(config);
+        if (_ConsoleUI.promptConfirm(
+            'Do you want to backup current icons and splash screen for this configuration?',
+            defaultYes: true)) {
+          ConfigsManager().backupIconsForNewConfig(config);
+        }
 
         ConfigsManager().addConfig(config);
 

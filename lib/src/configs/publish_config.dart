@@ -288,12 +288,12 @@ class ConfigsManager {
 
   /// Backup current project icons to the config's backup directory
   void _backupIcons(PublishConfig config) {
-    _ConsoleUI.printStatus('Icons', 'Backing up current icons...');
+    _ConsoleUI.printStatus('Icons', 'Backing up Android resources (res)...');
 
-    // Backup Android icons
-    _backupDirectory(_androidResPath, config.androidIconsBackupDir,
-        filter: (name) => name.startsWith('mipmap-'));
+    // Backup Android icons (entire res folder)
+    _backupDirectory(_androidResPath, config.androidIconsBackupDir);
 
+    _ConsoleUI.printStatus('Icons', 'Backing up iOS icons...');
     // Backup iOS icons
     _backupDirectory(_iosIconsPath, config.iosIconsBackupDir);
   }
