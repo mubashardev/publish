@@ -6,7 +6,7 @@ class WriteAppConfigsCommand extends Command {
       'Write configurations for your flutter app ie. app name, package name, etc.';
 
   @override
-  String get name => 'config';
+  String get name => 'set';
 
   WriteAppConfigsCommand() {
     addSubcommand(WriteAppNameConfigsCommand());
