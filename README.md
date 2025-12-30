@@ -39,10 +39,12 @@ You can now use the `publish` command anywhere in your terminal.
    ```bash
    publish doctor
    ```
+   ![Publish Doctor](https://github.com/mubashardev/publish/raw/master/assets/publish_doctor.gif)
 2. **Quick Setup** with the interactive wizard:
    ```bash
    publish init
    ```
+   ![Publish Init](https://github.com/mubashardev/publish/raw/master/assets/publish_init.gif)
 3. **Verify** everything is configured:
    ```bash
    publish doctor
@@ -83,6 +85,24 @@ When you create profiles or build legacy setups, `publish` ensures complete data
 | `config delete` | Delete a configuration. | `publish config delete staging` |
 | `config rename` | Rename a configuration. | `publish config rename old new` |
 
+<br>
+
+**List Configurations**
+
+![Config List](https://github.com/mubashardev/publish/raw/master/assets/publish_config_list.gif)
+
+**Switch Configuration**
+
+![Config Switch](https://github.com/mubashardev/publish/raw/master/assets/publish_config_switch.gif)
+
+**Export Configuration**
+
+![Config Export](https://github.com/mubashardev/publish/raw/master/assets/publish_config_export.gif)
+
+**Exported Output Structure**
+
+![Exported Output](https://github.com/mubashardev/publish/raw/master/assets/publish_exported_output.gif)
+
 ### Building with Configs
 
 You can build with a specific configuration without permanently switching to it:
@@ -90,6 +110,8 @@ You can build with a specific configuration without permanently switching to it:
 ```bash
 publish build android --config staging
 ```
+
+![Publish Build Android](https://github.com/mubashardev/publish/raw/master/assets/publish_build_android.gif)
 
 This temporary applies the `staging` profile (icons, ids, signing), builds the app, and reverts to your previous state.
 
@@ -112,6 +134,16 @@ This temporary applies the `staging` profile (icons, ids, signing), builds the a
 |---------|-------------|
 | `build android` | Validates configuration and builds Android App Bundle (`.aab`). Supports `--config`. |
 | `sign android` | Interactive wizard to setup signing. **Supports migrating existing keys!** |
+
+<br>
+
+**Signing Android App**
+
+![Publish Sign Android](https://github.com/mubashardev/publish/raw/master/assets/publish_sign_android.gif)
+
+**Signing 2nd Configuration**
+
+![Publish Sign 2nd Config](https://github.com/mubashardev/publish/raw/master/assets/publish_sign_2nd_config.gif)
 
 ### Assets
 
