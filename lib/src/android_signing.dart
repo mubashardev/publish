@@ -12,8 +12,9 @@ class _AndroidSigning {
       name = _ConsoleUI.ask("Enter configuration name", required: true,
           validator: (val) {
         if (val == null || val.isEmpty) return 'Name cannot be empty';
-        if (val.contains(RegExp(r'[^a-zA-Z0-9_]')))
+        if (val.contains(RegExp(r'[^a-zA-Z0-9_]'))) {
           return 'Use only letters, numbers, and underscores';
+        }
         return null;
       });
     }
