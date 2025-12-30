@@ -86,7 +86,11 @@ class BuildAndroidCommand extends Command {
     }
 
     /// 2. Execution
-    _ConsoleUI.startLoading('Building Android App Bundle...');
+    final activeConfig = ConfigsManager().activeConfigName;
+    final buildingMessage = activeConfig != null
+        ? 'Building Android App Bundle for "$activeConfig"...'
+        : 'Building Android App Bundle...';
+    _ConsoleUI.startLoading(buildingMessage);
 
     await Future.delayed(Duration(seconds: 2));
 

@@ -231,12 +231,18 @@ class ConfigsManager {
           'storeFile': 'storeFile',
         };
 
+    // Resolve keystore path to absolute for Gradle compatibility
+    final keystoreFile = File(config.keystorePath);
+    final absoluteKeystorePath = keystoreFile.isAbsolute
+        ? config.keystorePath
+        : keystoreFile.absolute.path;
+
     final buffer = StringBuffer();
     // Write standard properties
     buffer.writeln('${keys['storePassword']}=${config.storePassword}');
     buffer.writeln('${keys['keyPassword']}=${config.keyPassword}');
     buffer.writeln('${keys['keyAlias']}=${config.keyAlias}');
-    buffer.writeln('${keys['storeFile']}=${config.keystorePath}');
+    buffer.writeln('${keys['storeFile']}=$absoluteKeystorePath');
 
     // Write extra properties
     config.extraProperties?.forEach((key, value) {

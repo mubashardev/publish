@@ -19,10 +19,10 @@ class _AndroidSigning {
       });
     }
 
-    // Determine paths
+    // Determine paths (use absolute paths for Gradle compatibility)
     final configDir = Directory('publish_configs/$name');
     if (!configDir.existsSync()) configDir.createSync(recursive: true);
-    final keystorePath = "${configDir.path}/keystore.jks";
+    final keystorePath = File("${configDir.path}/keystore.jks").absolute.path;
 
     // App ID
     var appId = _AndroidConfigs.appId;
