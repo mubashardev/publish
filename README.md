@@ -39,12 +39,12 @@ You can now use the `publish` command anywhere in your terminal.
    ```bash
    publish doctor
    ```
-   ![Publish Doctor](https://github.com/mubashardev/publish/raw/master/assets/publish_doctor.gif)
+   ![Publish Doctor](https://github.com/mubashardev/publish/raw/main/assets/publish_doctor.gif)
 2. **Quick Setup** with the interactive wizard:
    ```bash
    publish init
    ```
-   ![Publish Init](https://github.com/mubashardev/publish/raw/master/assets/publish_init.gif)
+   ![Publish Init](https://github.com/mubashardev/publish/raw/main/assets/publish_init.gif)
 3. **Verify** everything is configured:
    ```bash
    publish doctor
@@ -89,19 +89,19 @@ When you create profiles or build legacy setups, `publish` ensures complete data
 
 **List Configurations**
 
-![Config List](https://github.com/mubashardev/publish/raw/master/assets/publish_config_list.gif)
+![Config List](https://github.com/mubashardev/publish/raw/main/assets/publish_config_list.gif)
 
 **Switch Configuration**
 
-![Config Switch](https://github.com/mubashardev/publish/raw/master/assets/publish_config_switch.gif)
+![Config Switch](https://github.com/mubashardev/publish/raw/main/assets/publish_config_switch.gif)
 
 **Export Configuration**
 
-![Config Export](https://github.com/mubashardev/publish/raw/master/assets/publish_config_export.gif)
+![Config Export](https://github.com/mubashardev/publish/raw/main/assets/publish_config_export.gif)
 
 **Exported Output Structure**
 
-![Exported Output](https://github.com/mubashardev/publish/raw/master/assets/publish_exported_output.gif)
+![Exported Output](https://github.com/mubashardev/publish/raw/main/assets/publish_exported_output.gif)
 
 ### Building with Configs
 
@@ -111,7 +111,7 @@ You can build with a specific configuration without permanently switching to it:
 publish build android --config staging
 ```
 
-![Publish Build Android](https://github.com/mubashardev/publish/raw/master/assets/publish_build_android.gif)
+![Publish Build Android](https://github.com/mubashardev/publish/raw/main/assets/publish_build_android.gif)
 
 This temporary applies the `staging` profile (icons, ids, signing), builds the app, and reverts to your previous state.
 
@@ -139,11 +139,11 @@ This temporary applies the `staging` profile (icons, ids, signing), builds the a
 
 **Signing Android App**
 
-![Publish Sign Android](https://github.com/mubashardev/publish/raw/master/assets/publish_sign_android.gif)
+![Publish Sign Android](https://github.com/mubashardev/publish/raw/main/assets/publish_sign_android.gif)
 
-**Signing 2nd Configuration**
+**Signing Another Configuration**
 
-![Publish Sign 2nd Config](https://github.com/mubashardev/publish/raw/master/assets/publish_sign_2nd_config.gif)
+![Publish Sign 2nd Config](https://github.com/mubashardev/publish/raw/main/assets/publish_sign_2nd_config.gif)
 
 ### Assets
 

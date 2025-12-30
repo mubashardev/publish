@@ -1,3 +1,7 @@
+## [1.3.3] - 2025-12-30
+### 🐛 Fixes
+- **Documentation**: Corrected GIF URLs in README.md to point to `main` branch instead of `master`.
+
 ## [1.3.2] - 2025-12-30
 ### 🔧 Improvements
 - **Better Documentation**: updated README.md with GIF demonstrations for various commands and features.
