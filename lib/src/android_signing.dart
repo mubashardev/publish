@@ -305,11 +305,6 @@ class _AndroidSigning {
     return _GradleSchema(propertiesPath, propertyKeys, keysFound);
   }
 
-  static Future<String?> _askToChangeId(String oldId) async {
-    // Deprecated in favor of direct input in sign()
-    return null;
-  }
-
   static Future<Map<String, String>?> _generateKeystore(
       String keystorePath) async {
     final alias = _ConsoleUI.ask("Key alias", defaultValue: 'upload');
