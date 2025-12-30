@@ -1,0 +1,29 @@
+# .gitignore content
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+*.iml
+*.ipr
+*.iws
+.idea/
+/pubspec.lock
+**/doc/api/
+.dart_tool/
+build/
+docs/
+
+# Custom exclusions
+.gitignore
+.git
+.github
+publish_configs
+supported_gradle_formats
+test
+assets/
