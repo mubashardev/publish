@@ -1,3 +1,7 @@
+## [1.3.2] - 2025-12-30
+### 🔧 Improvements
+- **Better Documentation**: updated README.md with GIF demonstrations for various commands and features.
+
 ## [1.3.1] - 2025-12-30
 ### 🔧 Improvements
 - **Better Inputs Handling**: `publish` now better handles default values.
