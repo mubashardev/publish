@@ -44,11 +44,7 @@ class WriteAppNameConfigsCommand extends Command {
     var value = argResults?['value'];
     if (value == null) {
       _ConsoleUI.printWarning('No app name provided via --value flag');
-      value = _ConsoleUI.prompt('Enter new app name', required: true);
-      if (value == null || value.isEmpty) {
-        _ConsoleUI.printError('App name cannot be empty');
-        return;
-      }
+      value = _ConsoleUI.ask('Enter new app name', required: true);
     }
 
     if (!_Validator.isValidAppName(value)) {
@@ -107,12 +103,7 @@ class WriteAppIdConfigsCommand extends Command {
     var value = argResults?['value'];
     if (value == null) {
       _ConsoleUI.printWarning('No app ID provided via --value flag');
-      value =
-          _ConsoleUI.prompt('Enter new app ID (package name)', required: true);
-      if (value == null || value.isEmpty) {
-        _ConsoleUI.printError('App ID cannot be empty');
-        return;
-      }
+      value = _ConsoleUI.ask('Enter new app ID (package name)', required: true);
     }
 
     if (!_Validator.isValidAppId(value)) {

@@ -221,34 +221,24 @@ class _ConfigEditCommand extends Command {
     }
 
     _ConsoleUI.printHeader('✏️ Edit Configuration: $name',
-        subtitle: 'Leave blank to keep current value');
+        subtitle: 'Press Enter to keep current value');
 
-    String? newAppName;
-    String? newPackageId;
-    String? newVersionSuffix;
-    String? newSplashColor;
+    // App Name
+    final newAppName = _ConsoleUI.ask('App Name', defaultValue: config.appName);
 
-    if (_ConsoleUI.promptConfirm(
-        'Change App Name? (current: ${config.appName})')) {
-      newAppName = _ConsoleUI.prompt('New App Name');
-    }
+    // Package ID
+    final newPackageId =
+        _ConsoleUI.ask('Package ID', defaultValue: config.packageId);
 
-    if (_ConsoleUI.promptConfirm(
-        'Change Package ID? (current: ${config.packageId})')) {
-      newPackageId = _ConsoleUI.prompt('New Package ID');
-    }
+    // Version Suffix
+    String? newVersionSuffix = _ConsoleUI.ask('Version Suffix',
+        defaultValue: config.versionSuffix ?? '');
+    if (newVersionSuffix.isEmpty) newVersionSuffix = null;
 
-    if (_ConsoleUI.promptConfirm(
-        'Change Version Suffix? (current: ${config.versionSuffix ?? "none"})')) {
-      newVersionSuffix =
-          _ConsoleUI.prompt('New Version Suffix (e.g. -staging)');
-    }
-
-    if (_ConsoleUI.promptConfirm(
-        'Change Splash Color? (current: ${config.splashColor ?? "none"})')) {
-      newSplashColor =
-          _ConsoleUI.prompt('New Splash Color (hex, e.g. #FF5722)');
-    }
+    // Splash Color
+    String? newSplashColor = _ConsoleUI.ask('Splash Color (hex)',
+        defaultValue: config.splashColor ?? '');
+    if (newSplashColor.isEmpty) newSplashColor = null;
 
     final updatedConfig = config.copyWith(
       appName: newAppName,

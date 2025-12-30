@@ -1,3 +1,7 @@
+## [1.3.1] - 2025-12-30
+### 🔧 Improvements
+- **Better Inputs Handling**: `publish` now better handles default values.
+
 ## [1.3.0] - 2025-12-29
 ### ✨ Features
 - **Smart Legacy Migration**: Now strictly checks `build.gradle` to identify the exact custom `key.properties` file and variable names used (`keyAlias`, `storeFile`, etc.) when migrating legacy setups, ensuring your existing build configuration remains untouched.

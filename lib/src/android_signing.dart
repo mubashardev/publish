@@ -9,9 +9,13 @@ class _AndroidSigning {
 
     String? name = configName;
     if (name == null) {
-      name = _ConsoleUI.prompt("Enter configuration name (e.g. prod, staging)",
-          required: true);
-      if (name == null) return null;
+      name = _ConsoleUI.ask("Enter configuration name", required: true,
+          validator: (val) {
+        if (val == null || val.isEmpty) return 'Name cannot be empty';
+        if (val.contains(RegExp(r'[^a-zA-Z0-9_]')))
+          return 'Use only letters, numbers, and underscores';
+        return null;
+      });
     }
 
     // Determine paths
@@ -19,48 +23,36 @@ class _AndroidSigning {
     if (!configDir.existsSync()) configDir.createSync(recursive: true);
     final keystorePath = "${configDir.path}/keystore.jks";
 
+    // App ID
     var appId = _AndroidConfigs.appId;
-    final newId = await _askToChangeId(appId);
-    if (newId != null) {
-      appId = newId;
-    }
+    appId = _ConsoleUI.ask('Package ID', defaultValue: appId);
 
-    // Check App Name
+    // App Name
     var appName = _AndroidConfigs.appName;
-    if (_ConsoleUI.promptConfirm("Do you want to change the App Name?")) {
-      final newName = _ConsoleUI.prompt("Enter new App Name", required: true);
-      if (newName != null) appName = newName;
-    }
+    appName = _ConsoleUI.ask('App Name', defaultValue: appName);
 
-    // Ask for icon
+    // App Icon
     String? iconSourcePath;
-    if (_ConsoleUI.promptConfirm(
-        "Do you want to set an icon for this configuration?")) {
-      iconSourcePath = _ConsoleUI.prompt(
-          "Enter path to icon source image (1024x1024 png recommended)",
-          required: true);
-      if (iconSourcePath != null && File(iconSourcePath).existsSync()) {
+    final iconInput =
+        _ConsoleUI.ask("Icon source path (leave empty to skip generation)");
+    if (iconInput.isNotEmpty) {
+      if (File(iconInput).existsSync()) {
+        iconSourcePath = iconInput;
         _ConsoleUI.printInfo('Icons will be generated and backed up...');
         await IconsCommand.generate(File(iconSourcePath));
-      } else if (iconSourcePath != null) {
-        _ConsoleUI.printWarning(
-            'Icon file not found at $iconSourcePath. Skipping icon generation.');
-        iconSourcePath = null;
+      } else {
+        _ConsoleUI.printWarning('File not found: $iconInput');
       }
     }
 
-    // Ask for version suffix
-    String? versionSuffix;
-    if (_ConsoleUI.promptConfirm(
-        "Do you want to add a version suffix? (e.g. -staging, -beta)")) {
-      versionSuffix = _ConsoleUI.prompt("Enter version suffix");
-    }
+    // Version Suffix
+    String? versionSuffix = _ConsoleUI.ask("Version Suffix", defaultValue: "");
+    if (versionSuffix.isEmpty) versionSuffix = null;
 
-    // Ask for splash color
-    String? splashColor;
-    if (_ConsoleUI.promptConfirm("Do you want to set a splash screen color?")) {
-      splashColor = _ConsoleUI.prompt("Enter splash color (hex, e.g. #FF5722)");
-    }
+    // Splash Color
+    String? splashColor =
+        _ConsoleUI.ask("Splash Color (hex)", defaultValue: "");
+    if (splashColor.isEmpty) splashColor = null;
 
     final credentials = await _generateKeystore(keystorePath);
     if (credentials == null) return null;
@@ -172,11 +164,8 @@ class _AndroidSigning {
     }
 
     // 4. Prompt for extras (optional)
-    String? versionSuffix;
-    if (_ConsoleUI.promptConfirm(
-        "Does this setup use a version suffix? (e.g. -beta)")) {
-      versionSuffix = _ConsoleUI.prompt("Enter suffix");
-    }
+    String? versionSuffix = _ConsoleUI.ask("Version Suffix", defaultValue: "");
+    if (versionSuffix.isEmpty) versionSuffix = null;
 
     return PublishConfig(
       name: name,
@@ -317,45 +306,35 @@ class _AndroidSigning {
   }
 
   static Future<String?> _askToChangeId(String oldId) async {
-    _ConsoleUI.printStatus('Config', 'Current package name: $oldId');
-    if (_ConsoleUI.promptConfirm('Do you want to change the package ID?')) {
-      final newId =
-          _ConsoleUI.prompt('Enter new package ID (e.g. com.example.app)');
-      if (newId != null && newId.isNotEmpty) {
-        return newId;
-      }
-    }
+    // Deprecated in favor of direct input in sign()
     return null;
   }
 
   static Future<Map<String, String>?> _generateKeystore(
       String keystorePath) async {
-    final alias = _ConsoleUI.prompt("Enter key alias");
+    final alias = _ConsoleUI.ask("Key alias", defaultValue: 'upload');
     final cn =
-        _ConsoleUI.prompt("Publisher's Common Name (e.g. Mubashar Dev)") ??
-            'Mubashar Dev';
-    final ou = _ConsoleUI.prompt("Organizational Unit (e.g. MH)") ?? 'MH';
-    final org = _ConsoleUI.prompt("Organization (e.g. MicroProgramers)") ??
-        'MicroProgramers';
-    final locality = _ConsoleUI.prompt("Locality (e.g. Layyah)") ?? 'Layyah';
-    final state = _ConsoleUI.prompt("State (e.g. Punjab)") ?? 'Punjab';
-    final country = _ConsoleUI.prompt("Country ISO (e.g. PK)") ?? 'PK';
+        _ConsoleUI.ask("Publisher's Common Name", defaultValue: 'Mubashar Dev');
+    final ou = _ConsoleUI.ask("Organizational Unit", defaultValue: 'MH');
+    final org = _ConsoleUI.ask("Organization", defaultValue: 'MicroProgramers');
+    final locality = _ConsoleUI.ask("Locality", defaultValue: 'Layyah');
+    final state = _ConsoleUI.ask("State", defaultValue: 'Punjab');
+    final country = _ConsoleUI.ask("Country ISO", defaultValue: 'PK');
 
-    final validityInput = _ConsoleUI.prompt("Validity Years (e.g. 100)");
-    final validity = int.tryParse(validityInput ?? "");
+    final validityInput = _ConsoleUI.ask("Validity Years", defaultValue: '100');
+    final validity = int.tryParse(validityInput);
     final days = validity != null
         ? (validity * 365)
         : (DateTime(9999).difference(DateTime.now()).inDays);
 
     final dname = "CN=$cn, OU=$ou, O=$org, L=$locality, S=$state, C=$country";
 
-    final keyPass = _ConsoleUI.prompt("Key password", required: true);
-    final keystorePass = _ConsoleUI.prompt("Keystore password", required: true);
+    final keyPass =
+        _ConsoleUI.ask("Key password", required: true, hidden: true);
+    final keystorePass =
+        _ConsoleUI.ask("Keystore password", required: true, hidden: true);
 
-    if (alias == null ||
-        alias.isEmpty ||
-        keyPass == null ||
-        keystorePass == null) {
+    if (alias.isEmpty || keyPass.isEmpty || keystorePass.isEmpty) {
       _ConsoleUI.printError("Key Alias and Passwords are required.");
       return null;
     }

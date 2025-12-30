@@ -104,6 +104,70 @@ class _ConsoleUI {
     return input;
   }
 
+  /// Prompts user for input with a default value
+  /// Returns the default value if the user presses Enter
+  static String ask(
+    String message, {
+    String? defaultValue,
+    bool required = false,
+    bool hidden = false,
+    String? Function(String?)? validator,
+  }) {
+    final defaultText =
+        defaultValue != null ? ' ${cyan}(default: $defaultValue)$reset' : '';
+    stdout.write('\n  ${cyan}?$reset  $message$defaultText: ');
+
+    // Handle hidden input (passwords) if needed, though dart:io's stdin doesn't support masking easily without extra packages
+    // For now we'll stick to standard readLineSync. If echoMode is needed we can toggle it but it's risky in some terminals.
+    if (hidden) {
+      stdin.echoMode = false;
+    }
+
+    String? input = stdin.readLineSync();
+
+    if (hidden) {
+      stdin.echoMode = true;
+      stdout.writeln(); // New line after hidden input
+    }
+
+    input = input?.trim();
+
+    if (input == null || input.isEmpty) {
+      if (defaultValue != null) {
+        // Visual update: overwrite the previous line to show the default value was selected
+        // \x1B[1A moves up one line (from the newline created by Enter)
+        // \r moves to start of line
+        // \x1B[K clears the line
+        stdout.write('\x1B[1A\r\x1B[K');
+        stdout.writeln('  ${cyan}?$reset  $message$defaultText: $defaultValue');
+        return defaultValue;
+      }
+      if (required) {
+        printError('This field is required');
+        return ask(message,
+            defaultValue: defaultValue,
+            required: required,
+            hidden: hidden,
+            validator: validator);
+      }
+      return '';
+    }
+
+    if (validator != null) {
+      final error = validator(input);
+      if (error != null) {
+        printError(error);
+        return ask(message,
+            defaultValue: defaultValue,
+            required: required,
+            hidden: hidden,
+            validator: validator);
+      }
+    }
+
+    return input;
+  }
+
   /// Prompts user for confirmation (yes/no)
   // ignore: unused_element
   static bool promptConfirm(String message, {bool defaultYes = false}) {
